@@ -1,0 +1,20 @@
+{
+  "name": "SeGLiR",
+  "description": "Sequential Generalized Likelihood Ratio Tests for A/B-testing",
+  "keywords": ["statistics"],
+  "version": "1.0.0",
+  "author": "Audun Mathias Øygard <amoygard@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/auduno/seglir.git"
+  },
+  "bugs": "https://github.com/auduno/seglir/issues",
+  "main": "SeGLiR.js",
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-contrib-concat": "~0.3.0"
+  },
+  "dependencies": {
+    "jstat": ">=1.0.6"
+  }
+}
