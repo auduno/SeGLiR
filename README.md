@@ -3,7 +3,9 @@ SeGLiR
 
 **SeGLiR** is a javascript library for rapid A/B-testing with **Sequential Generalized Likelihood Ratio Tests**.
 
-For a brief explanation of this family of tests, see [this post](http://auduno.com/seglir/). SeGLiR currently contain tests for comparing bernoulli proportions (for instance comparing two versions for conversion), but it's also planned to contain tests for comparing normal means, as well as tests for choosing the best arm in a multi-armed bandit setting with δ-PAC guarantees (ref. Emilie Kaufman).
+For a brief explanation of this family of tests, see [this post](http://auduno.com/seglir/). SeGLiR currently contain tests for comparing two bernoulli proportions (for instance for comparing  conversion), but it's also planned to contain tests for comparing two normal means, as well as tests for choosing the best arm in a multi-armed bandit setting with δ-PAC guarantees (ref. Emilie Kaufman).
+
+There are a number of improvements that can be done to this library, especially relating to the optimization algorithm for estimating a function minimum in two dimensions, so if you feel like helping out, take a look at the (issues)[].
 
 ### Usage ###
 
