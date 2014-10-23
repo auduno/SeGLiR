@@ -14,123 +14,249 @@
 <!--[if lt IE 9]>
 <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+</script>-
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 </head>
 <body>
 <div class="wrapper">
 <header>
 <h1>
-<a href="http://github.com/auduno/headtrackr/">headtrackr.js</a></h1>
-<p>Javascript library for headtracking via webcam and WebRTC/getUserMedia</p>
+<a href="http://github.com/auduno/seglir/">SeGLiR</a></h1>
+<p>Javascript library for rapid A/B-testing with Sequential Generalized Likelihood Ratio Tests</p>
 <p class="view">
-<a href="https://github.com/auduno/headtrackr">View the Project on GitHub <small>auduno/headtrackr</small></a></p>
+<a href="https://github.com/auduno/seglir">View the Project on GitHub <small>auduno/SeGLiR</small></a></p>
 <ul>
-<li><a href="https://github.com/auduno/headtrackr/zipball/master">Download <strong>ZIP File</strong></a></li>
-<li><a href="https://github.com/auduno/headtrackr/tarball/master">Download <strong>TAR Ball</strong></a></li>
-<li><a href="https://github.com/auduno/headtrackr">Fork On <strong>GitHub</strong></a></li>
+<li><a href="https://github.com/auduno/seglir/zipball/master">Download <strong>ZIP File</strong></a></li>
+<li><a href="https://github.com/auduno/seglir/tarball/master">Download <strong>TAR Ball</strong></a></li>
+<li><a href="https://github.com/auduno/seglir">Fork On <strong>GitHub</strong></a></li>
 </ul>
 </header>
 <section>
 <h1>Library Reference</h1>
 
-<h2 id="process">Flow</h2>
+<!--<h2 id="process">Flow</h2>-->
 
-<p>This is the rough process that will happen on regular intervals once headtrackr is started. On initialization we will also check whether getUserMedia is supported and if we are able to stream from a camera at all.</p>
+<p>SeGLiR is a javascript implementation of hypothesis testing via Sequential Generalized Likelihood Ratio Tests. This is a sequential test that will stop as soon as we detect a significant difference, in corrr. to fixed sample-size tests, while still keeping type-1 and type-2 error guarantees. This in most cases gives a *significant* improvement in the number of samples needed before concluding a test, and has been shown by for instance Tartakovsky to be "uniformly first-order asymptotically optimal" with regard to minimizing samplesize for tests based on a exponential family parameter.</p>
 
-<p style="text-align:center"><a href="./flowfig1d.png" rel="lightbox" title="Flow"><img src="./flowfig1d.png" width="400px" height="397px"></img></a></p>
+<p>Mathematically, we have two hypotheses $H_0 : \theta \in \Theta_0$ and $H_A : \theta \in \Theta_A$ and we want to find out which is most likely based on data. Typically there is also a small indifference region between $\Theta_0$ and $\Theta_A$ where we don't care about our type-1 and type-2 guarantees. The test will stop at time T, where T is defined as:</p>
 
-<h2 id="events">Events</h2>
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+<mi>T</mi>
+<mo>=</mo>
+<mrow>
+  <mi>inf</mi>
+  <mrow>
+    <mo form="prefix">{</mo>
+    <mi>n</mi>
+    <mo>:</mo>
+    <msub>
+      <mi>L</mi>
+      <mrow>
+        <mi>n</mi>
+        <mi>a</mi>
+      </mrow>
+    </msub>
+    <mo>&gt;</mo>
+    <msub>
+      <mi>b</mi>
+      <mn>0</mn>
+    </msub>
+    <mspace width="0.278em" />
+    <mtext>or</mtext>
+    <mspace width="0.278em" />
+    <msub>
+      <mi>L</mi>
+      <mrow>
+        <mi>n</mi>
+        <mi>b</mi>
+      </mrow>
+    </msub>
+    <mo>&gt;</mo>
+    <msub>
+      <mi>b</mi>
+      <mn>1</mn>
+    </msub>
+    <mo form="postfix">}</mo>
+  </mrow>
+</mrow>
+</math>
 
-<p>Once started, <em>headtrackr.js</em> produces three types of events on the document. <em>headtrackrStatus</em> is triggered on any changes in status, such as when the face is detected, when tracking of the face is lost, and similar. <em>facetrackingEvent</em> is triggered every 20 ms (depending on detection interval), and gives us the position of the face on the canvas. <em>headtrackingEvent</em> is also triggered every 20 ms, and gives us the calculated position of the head relative to the camera. Note that these two events will first be triggered when the face is detected and tracked. Details of what properties each event passes along are below, and actions can be triggered by any of these events in the standard way:</p>
+<p>where</p>
 
-<pre><code>document.addEventListener('headtrackrStatus', 
-  function (event) {
-    if (event.status == "getUserMedia") {
-      alert("getUserMedia is supported!");
-    }
-  }
-);
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+<mrow>
+  <msub>
+    <mi>L</mi>
+    <mrow>
+      <mi>n</mi>
+      <mi>a</mi>
+    </mrow>
+  </msub>
+  <mo>=</mo>
+  <mfrac linethickness="1">
+    <mrow>
+      <mstyle displaystyle="true">
+        <munder>
+          <mi>sup</mi>
+          <mrow>
+            <mi>&theta;</mi>
+            <mo>&isin;</mo>
+            <mi>&Theta;</mi>
+          </mrow>
+        </munder>
+      </mstyle>
+      <mi>L</mi>
+      <mrow>
+        <mo form="prefix">(</mo>
+        <mi>&theta;</mi>
+        <mo form="postfix">)</mo>
+      </mrow>
+    </mrow>
+    <mrow>
+      <mstyle displaystyle="true">
+        <munder>
+          <mi>sup</mi>
+          <mrow>
+            <msub>
+              <mi>&theta;</mi>
+              <mn>0</mn>
+            </msub>
+            <mo>&isin;</mo>
+            <msub>
+              <mi>&Theta;</mi>
+              <mn>0</mn>
+            </msub>
+          </mrow>
+        </munder>
+      </mstyle>
+      <mi>L</mi>
+      <mrow>
+        <mo form="prefix">(</mo>
+        <msub>
+          <mi>&theta;</mi>
+          <mn>0</mn>
+        </msub>
+        <mo form="postfix">)</mo>
+      </mrow>
+    </mrow>
+  </mfrac>
+  <mspace width="0.278em" />
+  <mo>,</mo>
+  <mspace width="0.278em" />
+  <msub>
+    <mi>L</mi>
+    <mrow>
+      <mi>n</mi>
+      <mi>b</mi>
+    </mrow>
+  </msub>
+  <mo>=</mo>
+  <mfrac linethickness="1">
+    <mrow>
+      <mstyle displaystyle="true">
+        <munder>
+          <mi>sup</mi>
+          <mrow>
+            <mi>&theta;</mi>
+            <mo>&isin;</mo>
+            <mi>&Theta;</mi>
+          </mrow>
+        </munder>
+      </mstyle>
+      <mi>L</mi>
+      <mrow>
+        <mo form="prefix">(</mo>
+        <mi>&theta;</mi>
+        <mo form="postfix">)</mo>
+      </mrow>
+    </mrow>
+    <mrow>
+      <mstyle displaystyle="true">
+        <munder>
+          <mi>sup</mi>
+          <mrow>
+            <msub>
+              <mi>&theta;</mi>
+              <mi>A</mi>
+            </msub>
+            <mo>&isin;</mo>
+            <msub>
+              <mi>&Theta;</mi>
+              <mi>A</mi>
+            </msub>
+          </mrow>
+        </munder>
+      </mstyle>
+      <mi>L</mi>
+      <mrow>
+        <mo form="prefix">(</mo>
+        <msub>
+          <mi>&theta;</mi>
+          <mi>A</mi>
+        </msub>
+        <mo form="postfix">)</mo>
+      </mrow>
+    </mrow>
+  </mfrac>
+</mrow>
+</math>
+
+<p>and $b_0$ and $b_1$ are some precalculated thresholds so that the test fulfills type-1 and type-2 error guarantees. If $L_{na} > b_0$ at the time of stopping, the null hypothesis is rejected, while if $L_{nb} > b_1$ the alternative hypothesis is rejected.</p>
+
+<p>This library implements tests for comparing two bernoulli proportions, two-sided or one-sided, as well as .... It is easiest to install library via npm and use in node.js.</p>
+
+<pre><code>var glr = require(SeGLiR);
 </code></pre>
 
-<p><strong>headtrackrStatus</strong>:</p>
+<p>Generally the library follows the template of creating an instance of a test via :</p>
+
+<pre><code>var test = glr.test(type, sides, indifference_size, alpha, beta);
+</code></pre>
+
+<p>where <em>type</em> is the type of the test (for instance "bernoulli"), <em>sides</em> is "two-sided" or "one-sided", <em>indifference_size</em> is the size of the indifference region, <em>alpha</em> is the desired type-1 error, and <em>beta</em> is the desired type-2 error. Note that there may be additional parameters depending on the type of test. From the returned instance of the test, you can then add datasamples via <em>addData()</em>:</p>
+
+<pre><code>test.addData({'x' : 0});
+test.addData({'x' : 1, 'y' : 0});
+test.addData({'y' : 0});
+</code></pre>
+
+<p>If this function returns "true", "false" or "undefined", the test has finished. "true" means the null hypothesis was accepted, while "false" means the alternative hypothesis was accepted.</p>
+
+<h2 id="events">Comparison of two bernoulli proportions</h2>
+
+<p>In these tests we assume that we have two bernoulli samples, $X \sim B(p_1)$ and $Y \sim B(p_2)$, and want to compare p_1 and p_2.</p>
+
+<p><strong>Two-sided test</strong>:</p>
+
+<p>In the two-sided test we test the hypothesis $H_0 : p_1 = p_2$ versus $H_A : p_1 \neq p_2$, where p_1 and p_2 is the proportions in some bernoulli parameter.</p>
+
+<p>Test creation:</p>
+
+<p>Instance functions</p>
 
 <ul>
-<li><em>status</em> : status of headtracking. Can have these values:
-<ul>
-  <li><em>"getUserMedia"</em> : getUserMedia seems to be supported</li>
-  <li><em>"no getUserMedia"</em> : getUserMedia seems not to be supported</li>
-  <li><em>"camera found"</em> : camera found and allowed to stream</li>
-  <li><em>"no camera"</em> : camera not found, or streaming not allowed, or getUserMedia setup failed</li>
-  <li><em>"whitebalance"</em> : initialized detection of graylevels</li>
-  <li><em>"detecting"</em> : initialized detection of face</li>
-  <li><em>"hints"</em> : detecting the face took more than 5 seconds</li>
-  <li><em>"found"</em> : face detected, tracking initialized</li>
-  <li><em>"lost"</em> : lost tracking of face</li>
-  <li><em>"redetecting"</em> : trying to redetect face</li>
-  <li><em>"stopped"</em> : face tracking was stopped</li>
-</ul>
-</li>
+<li><strong>getResults()</strong> : returns results as a dict {}</li>
+<li><strong>pValue()</strong> : returns the simulated p-value</li>
+<li><strong>confInterval()</strong> : returns a confidence interval</li>
+<li><strong>estimate()</strong> : returns whitehead bias-adjusted estimates of p_1, p_2 and p_1-p_2</li>
+<li><strong>getData()</strong> : returns the sequences of data collected so far</li>
+<li><strong>addData()</strong> : add data points. Returns ".." if test is finished</li>
+<li><strong>expectedSamplesize(p_1, p_2)</strong> : simulates the expected sample size needed for true parameters p_1 and p_2</li>
+<li><strong>maxSamplesize()</strong> : returns the worst-case maximum samplesize of this test</li>
+<li><strong>properties()</strong> : returns object with properties of this test, such as alpha, beta, etc.</li>
 </ul>
 
-<p><strong>facetrackingEvent</strong>:</p>
+<p>A simple example</p>
 
-<ul>
-  <li><em>height</em> : height of face on canvas</li>
-  <li><em>width</em> : width of face on canvas</li>
-  <li><em>angle</em> : angle of face on canvas (in radians). The angle is calculated in normal counter-clockwise direction. I.e. if head is upright, this will return &pi;/2, if head is tilted towards right (as seen on canvas), this will return a degree between 0 and &pi;/2. Note that this is only calculated if "calcAngles" is enabled via parameters, default is that this is not enabled. When "calcAngles" is not enabled, this will always return &pi;/2, i.e. 90°.</li>
-  <li><em>x</em> : x-position of center of face on canvas</li>
-  <li><em>y</em> : y-position of center of face on canvas</li>
-  <li><em>confidence</em> : confidence in the detection (will only give a value for detection, not tracking)</li>
-  <li><em>detection</em> : type of detection/tracking, either "VJ" for Viola-Jones or "CS" for Camshift</li>
-  <li><em>time</em> : How long time it took to calculate this position (for debugging only)</li>
-</ul>
-
-<p><strong>headtrackingEvent</strong>:</p>
-
-<ul>
-  <li><em>x</em> : position of head in cm's right of camera as seen from users point of view (see figure)</li>
-  <li><em>y</em> : position of head in cm's above camera (see figure)</li>
-  <li><em>z</em> : position of head in cm's distance from camera (see figure)</li>
-</ul>
-
-<p style="text-align:center"><img src="./camorient1.png"></img></p>
-
-<h2 id="parameters">Parameters</h2>
-
-<p>When initializing the objects <em>headtrackr.Tracker</em>, <em>headtrackr.facetracker.Tracker</em> or <em>headtrackr.camshift.Tracker</em>, you can optionally specify some parameters, for instance:</p>
-
-<pre><code>var ht = new headtrackr.Tracker({ui : true, headPosition : false});</code></pre>
-
-<p>The optional parameters that can be passed along to headtrackr.Tracker are :</p>
-
-<ul>
-<li><strong>ui</strong> {<em>boolean</em>} : whether to create messageoverlay with messages like "found face" (default is true)</li>
-<li><strong>altVideo</strong> {<em>object</em>} : urls to any alternative videos, if camera is not found or not supported. The format is : {'ogv' : 'somevideo.ogv', 'mp4' : 'somevideo.mp4', 'webm' : 'somevideo.webm'}</li>
-<li><strong>smoothing</strong> {<em>boolean</em>} : whether to use smoothing (default is true)</li>
-<li><strong>debug</strong> {<em>canvas element</em>} : pass along a canvas to paint output of facedetection, for debugging</li>
-<li><strong>detectionInterval</strong> {<em>number</em>} : time we wait before doing a new facedetection (default is 20 ms)</li>
-<li><strong>retryDetection</strong> {<em>boolean</em>} : whether to start facedetection again if we lose track of face (default is true)</li>
-<li><strong>fov</strong> {<em>number</em>} : horizontal field of view of used camera in degrees (default is to estimate this)</li>
-<li><strong>fadeVideo</strong> {<em>boolean</em>} : whether to fade out video when face is detected (default is false)</li>
-<li><strong>cameraOffset</strong> {<em>number</em>} : distance from camera to center of screen, used to offset position of head (default is 11.5)</li>
-<li><strong>calcAngles</strong> {<em>boolean</em>} : whether to calculate angles when doing facetracking (default is false)</li>
-<li><strong>headPosition</strong> {<em>boolean</em>} : whether to calculate headposition (default is true)</li>
-</ul>
-
-<p>The optional parameters to headtrackr.facetrackr.Tracker :</p>
-
-<ul>
-<li><strong>smoothing</strong> {<em>boolean</em>} : whether to use smoothing on output (default is true)</li>
-<li><strong>smoothingInterval</strong> {<em>number</em>} : should be the same as detectionInterval plus time of tracking (default is 35 ms)</li>
-<li><strong>sendEvents</strong> {<em>boolean</em>} : whether to send events (default is true)</li>
-<li><strong>whitebalancing</strong> {<em>boolean</em>} : whether to wait for camera whitebalancing before starting detection (default is true)</li>
-<li><strong>calcAngles</strong> {<em>boolean</em>} : whether to calculate orientation of tracked object (default for facetrackr is false)</li>
-</ul>
-
-<p>Optional parameters to headtrackr.camshift.Tracker :</p>
-
-<ul>
-<li><strong>calcAngles</strong> {<em>boolean</em>} : whether to calculate orientation of tracked object (default for camshift is true)</li>
-</ul>
+<pre><code>var test = glr.test("bernoulli","two-sided",0.01,0.05,0.10);
+// add data from samples as they come in
+test.add({'x' : 0});
+test.add({'y' : 1});
+test.add({'y' : 1, 'x' : 0});
+// stuff
+</code></pre>
 
 <h2 id="events">Functions</h2>
 
@@ -147,28 +273,6 @@
   <li><strong><em>stop</em></strong>( ) : stop the running tracker.</li>
   <li><strong><em>stopStream</em></strong>( ) : stop the mediastream from webcam if there is one.</li>
   <li><strong><em>getFOV</em></strong>( ) : get estimated field of view of webcam.</li>
-</ul>
-
-<h2>Elements</h2>
-
-<p style="text-align:center"><a href="./htfig1b.png" rel="lightbox" title="Elements"><img src="./htfig1b.png" width="400px" height="151px"></img></a></p>
-
-<ul>
-<li><em>ccv.js</em> : generic viola-jones type detection, from <a href="https://github.com/liuliu/ccv">libccv</a></li>
-<li><em>cascade.js</em> : face data model for ccv.js for detecting faces, from <a href="https://github.com/liuliu/ccv">libccv</a></li>
-<li><em>camshift.js</em> : camshift object tracker</li>
-<li><em>facetrackr.js</em> : wrapper around object tracker and face detector. Where most coordination happens</li>
-<li><em>smoother.js</em> : generic time series smoother</li>
-<li><em>headposition.js</em> : calculation of position of head in relation to screen</li>
-<li><em>main.js</em> : wrapper around everything. Where everything is initiated.</li>
-<li><em>controllers.js</em> : optional eventhandlers that create head-coupled perspective based on headtracking events</li>
-<li><em>whitebalance.js</em> : a simple function for calculating graylevel, used for whitebalancing/levels</li>
-<li><em>ui.js</em> : optional element that creates messaging ui on status events</li>
-<li><em>license.js</em> : license</li>
-</ul>
-
-<ul>
-<li><em>headtrackr.js</em> : minified version of library</li>
 </ul>
 
 
