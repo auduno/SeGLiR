@@ -38,54 +38,54 @@
 
 <!--<h2 id="process">Flow</h2>-->
 
-<p>SeGLiR is a javascript implementation of A/B-testing (AKA hypothesis testing) via Sequential Generalized Likelihood Ratio Tests. The Sequential Generalized Likelihood Ratio Test is a sequential hypothesis test that will stop as soon as we are able to reject a hypothesis, while still keeping type-1 and type-2 error guarantees. Compared to fixed-sample size tests, this usually gives a significant improvement in the needed samplesize, at the cost of some loss of precision in estimates. The test has been shown<sup><a href="#fn1">1</a></sup> to be <em>uniformly first-order asymptotically optimal</em> with regard to minimizing samplesize for tests based on a exponential family parameter. For a comparison between expected samplesize with Sequential Generalized Likelihood Ratio tests and classical fixed-sample size tests, take a look at this example:</p>
+<p>SeGLiR is a javascript implementation of hypothesis testing (aka A/B-testing) via Sequential Generalized Likelihood Ratio Tests. The Sequential Generalized Likelihood Ratio Test is a family of sequential hypothesis test that will stop as soon as we are able to reject a hypothesis, while still keeping type-1 and type-2 error guarantees. Compared to fixed-sample size tests, this usually gives a significant improvement in the needed samplesize, at the cost of some loss of precision in estimates when the test is done. The test has been shown<sup><a href="#fn1">1</a></sup> to be <em>uniformly first-order asymptotically optimal</em> with regard to minimizing samplesize for tests based on a exponential family parameter. For some idea about the difference in expected samplesize, here's numbers from a comparison of bernoulli proportions with a fixed sample-size test and a sequential GLR test, both with $\alpha$ = 0.05, $\beta$ = 0.10 and $\delta$ = 0.01.</p>
 
-<p>[figure]</p>
+<p style="text-align:center">
+  <a href="../images/samplesize1.png" rel="lightbox" title="Expected Samplesize"><img src="../images/samplesize1.png" width="400px" height="305px">
+  </a>
+</p>
 
-<p>Mathematically, we have one or more variables $X$ with a distribution dependent on some parameter $\theta$. We also have two hypotheses $H_0 : \theta \in \Theta_0$ and $H_A : \theta \in \Theta_A$ and want to find out which is most likely based on data, with some guarantees on the Type-1 and Type-2 errors that are acceptable for the test. Typically there is also a small indifference region between $\Theta_0$ and $\Theta_A$ where we don't care about our type-1 and type-2 guarantees. The test will stop at time T, where T is defined as:</p>
+<p>Mathematically, we have one or more variables $X$ with a distribution dependent on some parameter $\theta$. We also have two hypotheses $H_0 : \theta \in \Theta_0$ and $H_A : \theta \in \Theta_A$ and want to find out which is most likely based on data, with some guarantees on the Type-1 and Type-2 errors that are acceptable for the test. Typically there is also a small indifference region between $\Theta_0$ and $\Theta_A$ where we don't care about our type-1 and type-2 guarantees. The test will stop as soon as:</p>
+
+<!--<p>\begin{aligned}
+L_{na} \geq b_0 \;\mathrm{or}\; L_{nb} \geq b_1
+\end{aligned}</p>-->
 
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
-<mi>T</mi>
-<mo>=</mo>
 <mrow>
-  <mi>inf</mi>
-  <mrow>
-    <mo form="prefix">{</mo>
-    <mi>n</mi>
-    <mo>:</mo>
-    <msub>
-      <mi>L</mi>
-      <mrow>
-        <mi>n</mi>
-        <mi>a</mi>
-      </mrow>
-    </msub>
-    <mo>&gt;</mo>
-    <msub>
+  <msub>
+    <mi>L</mi>
+    <mrow>
+      <mi>n</mi>
+      <mi>a</mi>
+    </mrow>
+  </msub>
+  <mo>&geq;</mo>
+  <msub>
+    <mi>b</mi>
+    <mn>0</mn>
+  </msub>
+  <mspace width="0.278em" />
+  <mtext>or</mtext>
+  <mspace width="0.278em" />
+  <msub>
+    <mi>L</mi>
+    <mrow>
+      <mi>n</mi>
       <mi>b</mi>
-      <mn>0</mn>
-    </msub>
-    <mspace width="0.278em" />
-    <mtext>or</mtext>
-    <mspace width="0.278em" />
-    <msub>
-      <mi>L</mi>
-      <mrow>
-        <mi>n</mi>
-        <mi>b</mi>
-      </mrow>
-    </msub>
-    <mo>&gt;</mo>
-    <msub>
-      <mi>b</mi>
-      <mn>1</mn>
-    </msub>
-    <mo form="postfix">}</mo>
-  </mrow>
+    </mrow>
+  </msub>
+  <mo>&geq;</mo>
+  <msub>
+    <mi>b</mi>
+    <mn>1</mn>
+  </msub>
 </mrow>
 </math>
 
 <p>where</p>
+
+<!--<p>\begin{aligned} L_{na} = \frac{\sup_{\theta \in \Theta} \prod_{i=1}^{n} f_{\theta}(X_i) }{\sup_{\theta_0 \in \Theta_0} \prod_{i=1}^{n} f_{\theta_0}(X_i) } \; \mathrf{and} \;L_{nb} = \frac{\sup_{\theta \in \Theta} \prod_{i=1}^{n} f_{\theta}(X_i)}{\sup_{\theta_A \in \Theta_A} \prod_{i=1}^{n} f_{\theta_A}(X_i)} \end{aligned}</p>-->
 
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
 <mrow>
@@ -109,10 +109,27 @@
           </mrow>
         </munder>
       </mstyle>
-      <mi>L</mi>
+      <mstyle displaystyle="true">
+        <munderover>
+          <mo>&prod;</mo>
+          <mrow>
+            <mi>i</mi>
+            <mo>=</mo>
+            <mn>1</mn>
+          </mrow>
+          <mi>n</mi>
+        </munderover>
+      </mstyle>
+      <msub>
+        <mi>f</mi>
+        <mi>&theta;</mi>
+      </msub>
       <mrow>
         <mo form="prefix">(</mo>
-        <mi>&theta;</mi>
+        <msub>
+          <mi>X</mi>
+          <mi>i</mi>
+        </msub>
         <mo form="postfix">)</mo>
       </mrow>
     </mrow>
@@ -133,19 +150,38 @@
           </mrow>
         </munder>
       </mstyle>
-      <mi>L</mi>
+      <mstyle displaystyle="true">
+        <munderover>
+          <mo>&prod;</mo>
+          <mrow>
+            <mi>i</mi>
+            <mo>=</mo>
+            <mn>1</mn>
+          </mrow>
+          <mi>n</mi>
+        </munderover>
+      </mstyle>
+      <msub>
+        <mi>f</mi>
+        <mrow>
+          <msub>
+            <mi>&theta;</mi>
+            <mn>0</mn>
+          </msub>
+        </mrow>
+      </msub>
       <mrow>
         <mo form="prefix">(</mo>
         <msub>
-          <mi>&theta;</mi>
-          <mn>0</mn>
+          <mi>X</mi>
+          <mi>i</mi>
         </msub>
         <mo form="postfix">)</mo>
       </mrow>
     </mrow>
   </mfrac>
   <mspace width="0.278em" />
-  <mo>,</mo>
+  <mtext>,</mtext>
   <mspace width="0.278em" />
   <msub>
     <mi>L</mi>
@@ -167,10 +203,27 @@
           </mrow>
         </munder>
       </mstyle>
-      <mi>L</mi>
+      <mstyle displaystyle="true">
+        <munderover>
+          <mo>&prod;</mo>
+          <mrow>
+            <mi>i</mi>
+            <mo>=</mo>
+            <mn>1</mn>
+          </mrow>
+          <mi>n</mi>
+        </munderover>
+      </mstyle>
+      <msub>
+        <mi>f</mi>
+        <mi>&theta;</mi>
+      </msub>
       <mrow>
         <mo form="prefix">(</mo>
-        <mi>&theta;</mi>
+        <msub>
+          <mi>X</mi>
+          <mi>i</mi>
+        </msub>
         <mo form="postfix">)</mo>
       </mrow>
     </mrow>
@@ -191,12 +244,31 @@
           </mrow>
         </munder>
       </mstyle>
-      <mi>L</mi>
+      <mstyle displaystyle="true">
+        <munderover>
+          <mo>&prod;</mo>
+          <mrow>
+            <mi>i</mi>
+            <mo>=</mo>
+            <mn>1</mn>
+          </mrow>
+          <mi>n</mi>
+        </munderover>
+      </mstyle>
+      <msub>
+        <mi>f</mi>
+        <mrow>
+          <msub>
+            <mi>&theta;</mi>
+            <mi>A</mi>
+          </msub>
+        </mrow>
+      </msub>
       <mrow>
         <mo form="prefix">(</mo>
         <msub>
-          <mi>&theta;</mi>
-          <mi>A</mi>
+          <mi>X</mi>
+          <mi>i</mi>
         </msub>
         <mo form="postfix">)</mo>
       </mrow>
@@ -205,9 +277,9 @@
 </mrow>
 </math>
 
-<p>and $b_0$ and $b_1$ are some precalculated thresholds so that the test fulfills type-1 and type-2 error guarantees. If $L_{na} > b_0$ at the time of stopping, the null hypothesis is rejected, while if $L_{nb} > b_1$ the alternative hypothesis is rejected.</p>
+<p>and $b_0$ and $b_1$ are thresholds precalculated so that the test fulfills the wanted type-1 and type-2 error guarantees. If $L_{na} > b_0$ at the time of stopping, the null hypothesis is rejected (and the alternative hypothesis accepted), while if $L_{nb} > b_1$ the alternative hypothesis is rejected (and the null hypothesis accepted).</p>
 
-<p>This library currently implements these tests:</p>
+<p>This library currently implements these types of Sequential GLR tests:</p>
 <ul>
   <li>Comparing two bernoulli proportions</li>
   <li>Comparing two gaussian means, with unknown but equal variance</li>
@@ -229,14 +301,19 @@
 <pre><code>var test = glr.test(<em>type</em>, <em>sides</em>, <em>indifference_size</em>, <em>alpha</em>, <em>beta</em>);
 </code></pre>
 
-<p>where <em>type</em> is the type of the test (for instance "bernoulli"), <em>sides</em> is "two-sided" or "one-sided", <em>indifference_size</em> is the size of the indifference region, <em>alpha</em> is the desired type-1 error, and <em>beta</em> is the desired type-2 error. Note that these parameters may vary depending on the type of test. From the returned instance of the test, you can add datasamples via the function <em>addData()</em>:</p>
+<p>where <em>type</em> is the type of the test (for instance "bernoulli"), <em>sides</em> is "two-sided" or "one-sided", <em>indifference_size</em> is the size of the indifference region, <em>alpha</em> is the desired type-1 error, and <em>beta</em> is the desired type-2 error. These parameters may vary depending on the type of test, so check documentation for the test type below. Note that in a lot of cases, calculating the thresholds b_0 and b_1 in order to get the wanted type-1 and type-2 error may take a long time, so it's an advantage to select alpha and beta values where the thresholds are precalculated, see this under the specific test.</p>
 
-<pre><code>test.addData({'x' : 0});
-test.addData({'x' : 1, 'y' : 0});
-test.addData({'y' : 0});
+<p>From the returned instance of the test, you can add datasamples via the function <em>addData()</em>:</p>
+
+<pre><code>test.addData({x : 0});
+test.addData({x : 1, y : 0});
+test.addData({y : 0});
 </code></pre>
 
-<p>If this function returns "true", "false" or "undefined", the test has finished. "true" means the null hypothesis was accepted, while "false" means the alternative hypothesis was accepted.</p>
+<p>If this function returns the strings "true" or "false", the test has finished. "true" means the null hypothesis was accepted, while "false" means the alternative hypothesis was accepted. When the test is done, get estimates of the parameters of the test by calling:</p>
+
+<pre><code>test.estimate();
+</code></pre>
 
 <h2>Comparison of two bernoulli proportions</h2>
 
@@ -244,7 +321,17 @@ test.addData({'y' : 0});
 
 <p>In the two-sided test we test the hypotheses $H_0 : p_1 = p_2$ versus $H_A : |p_1 - p_2| > \delta$ (where $\delta > 0$ is the size of the indifference region), while in the one-sided test we test the hypotheses $H_0 : p_1 < p_2 - \delta$ versus $H_A : p_1 > p_2 + \delta$. Note that in both cases, this is equivalent to saying we are interested in detecting differences between $p_1$ and $p_2$ larger than $\delta > 0$.</p>
 
-<p>Test creation:</p>
+<p>Test instantiation:</p>
+
+<ul>
+<li><strong>test(</strong>"bernoulli", <em>sides</em>, <em>indifference</em>, <em>alpha</em>, <em>beta</em><strong>)</strong><ul>
+    <li><em>sides</em> : "one-sided" or "two-sided"</li>
+    <li><em>indifference</em> : the value of $\delta$, i.e. the size of the indifference region</li>
+    <li><em>alpha</em> : the wanted level of type-1 errors</li>
+    <li><em>beta</em> : the wanted level of type-2 errors</li>
+  </ul>
+</li>
+</ul>
 
 <p>Instance functions</p>
 
@@ -260,16 +347,22 @@ test.addData({'y' : 0});
 <li><em><strong>properties()</strong></em> : returns an object with properties of this test that were specified on initialization, such as <em>type</em>, <em>sides</em>, <em>indifference size</em>, <em>alpha</em> and <em>beta</em>.</li>
 </ul>
 
+<p>Precalculated thresholds:</p>
+
+<ul>
+  <li>Two-sided:</li>
+</ul>
+
 <p>A simple example:</p>
 
 <pre><code>var glr = require('seglir');
 var test = glr.test("bernoulli","two-sided",0.01,0.05,0.10);
 // add data from samples as they come in
-test.addData({'x' : 0});
-test.addData({'y' : 1});
-test.addData({'y' : 1, 'x' : 0});
-test.addData({'x' : 0, 'y' : 1});
-test.addData({'y' : 1, 'x' : 0}); // returns result "false", i.e. we reject the null-hypothesis
+test.addData({x : 0});
+test.addData({y : 1});
+test.addData({y : 1, x : 0});
+test.addData({x : 0, y : 1});
+test.addData({y : 1, x : 0}); // returns result "false", i.e. we reject the null-hypothesis
 // get estimates of p_1, p_2 and p_1-p_2
 test.estimate(); // returns [0, 1, -1]
 </code></pre>
