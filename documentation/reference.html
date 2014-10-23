@@ -38,9 +38,11 @@
 
 <!--<h2 id="process">Flow</h2>-->
 
-<p>SeGLiR is a javascript implementation of hypothesis testing via Sequential Generalized Likelihood Ratio Tests. This is a sequential test that will stop as soon as we detect a significant difference, in corrr. to fixed sample-size tests, while still keeping type-1 and type-2 error guarantees. This in most cases gives a *significant* improvement in the number of samples needed before concluding a test, and has been shown by for instance Tartakovsky to be "uniformly first-order asymptotically optimal" with regard to minimizing samplesize for tests based on a exponential family parameter.</p>
+<p>SeGLiR is a javascript implementation of A/B-testing (AKA hypothesis testing) via Sequential Generalized Likelihood Ratio Tests. The Sequential Generalized Likelihood Ratio Test is a sequential hypothesis test that will stop as soon as we are able to reject a hypothesis, while still keeping type-1 and type-2 error guarantees. Compared to fixed-sample size tests, this usually gives a significant improvement in the needed samplesize, at the cost of some loss of precision in estimates. The test has been shown<sup><a href="#fn1">1</a></sup> to be <em>uniformly first-order asymptotically optimal</em> with regard to minimizing samplesize for tests based on a exponential family parameter. For a comparison between expected samplesize with Sequential Generalized Likelihood Ratio tests and classical fixed-sample size tests, take a look at this example:</p>
 
-<p>Mathematically, we have two hypotheses $H_0 : \theta \in \Theta_0$ and $H_A : \theta \in \Theta_A$ and we want to find out which is most likely based on data. Typically there is also a small indifference region between $\Theta_0$ and $\Theta_A$ where we don't care about our type-1 and type-2 guarantees. The test will stop at time T, where T is defined as:</p>
+<p>[figure]</p>
+
+<p>Mathematically, we have one or more variables $X$ with a distribution dependent on some parameter $\theta$. We also have two hypotheses $H_0 : \theta \in \Theta_0$ and $H_A : \theta \in \Theta_A$ and want to find out which is most likely based on data, with some guarantees on the Type-1 and Type-2 errors that are acceptable for the test. Typically there is also a small indifference region between $\Theta_0$ and $\Theta_A$ where we don't care about our type-1 and type-2 guarantees. The test will stop at time T, where T is defined as:</p>
 
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
 <mi>T</mi>
@@ -205,17 +207,29 @@
 
 <p>and $b_0$ and $b_1$ are some precalculated thresholds so that the test fulfills type-1 and type-2 error guarantees. If $L_{na} > b_0$ at the time of stopping, the null hypothesis is rejected, while if $L_{nb} > b_1$ the alternative hypothesis is rejected.</p>
 
-<p>This library implements tests for comparing two bernoulli proportions, two-sided or one-sided, as well as .... It is easiest to install library via npm and use in node.js.</p>
+<p>This library currently implements these tests:</p>
+<ul>
+  <li>Comparing two bernoulli proportions</li>
+  <li>Comparing two gaussian means, with unknown but equal variance</li>
+  <li>Selecting the best arm in a two-armed bandit setting, with δ-PAC guarantees</li>
+</ul>
 
-<pre><code>var glr = require(SeGLiR);
+<p>It is easiest to install SeGLiR via node package manager (make sure you have node.js installed):</p>
+
+<pre><code>npm install seglir
+</code></pre>
+
+<p>and load via <em>require</em> in node.js.</p>
+
+<pre><code>var glr = require('seglir');
 </code></pre>
 
 <p>Generally the library follows the template of creating an instance of a test via :</p>
 
-<pre><code>var test = glr.test(type, sides, indifference_size, alpha, beta);
+<pre><code>var test = glr.test(<em>type</em>, <em>sides</em>, <em>indifference_size</em>, <em>alpha</em>, <em>beta</em>);
 </code></pre>
 
-<p>where <em>type</em> is the type of the test (for instance "bernoulli"), <em>sides</em> is "two-sided" or "one-sided", <em>indifference_size</em> is the size of the indifference region, <em>alpha</em> is the desired type-1 error, and <em>beta</em> is the desired type-2 error. Note that there may be additional parameters depending on the type of test. From the returned instance of the test, you can then add datasamples via <em>addData()</em>:</p>
+<p>where <em>type</em> is the type of the test (for instance "bernoulli"), <em>sides</em> is "two-sided" or "one-sided", <em>indifference_size</em> is the size of the indifference region, <em>alpha</em> is the desired type-1 error, and <em>beta</em> is the desired type-2 error. Note that these parameters may vary depending on the type of test. From the returned instance of the test, you can add datasamples via the function <em>addData()</em>:</p>
 
 <pre><code>test.addData({'x' : 0});
 test.addData({'x' : 1, 'y' : 0});
@@ -224,57 +238,44 @@ test.addData({'y' : 0});
 
 <p>If this function returns "true", "false" or "undefined", the test has finished. "true" means the null hypothesis was accepted, while "false" means the alternative hypothesis was accepted.</p>
 
-<h2 id="events">Comparison of two bernoulli proportions</h2>
+<h2>Comparison of two bernoulli proportions</h2>
 
-<p>In these tests we assume that we have two bernoulli samples, $X \sim B(p_1)$ and $Y \sim B(p_2)$, and want to compare p_1 and p_2.</p>
+<p>In these tests we assume that we have two random variables, $X$ and $Y$, where $X$ is bernoulli distributed with unknown parameter $p_1$ and $Y$ is bernoulli distributed with unknown parameter $p_2$, and we want to do some inference on the parameters $p_1$ and $p_2$. These tests are what is commonly used in web page testing, for instance for testing conversion.</p>
 
-<p><strong>Two-sided test</strong>:</p>
-
-<p>In the two-sided test we test the hypothesis $H_0 : p_1 = p_2$ versus $H_A : p_1 \neq p_2$, where p_1 and p_2 is the proportions in some bernoulli parameter.</p>
+<p>In the two-sided test we test the hypotheses $H_0 : p_1 = p_2$ versus $H_A : |p_1 - p_2| > \delta$ (where $\delta > 0$ is the size of the indifference region), while in the one-sided test we test the hypotheses $H_0 : p_1 < p_2 - \delta$ versus $H_A : p_1 > p_2 + \delta$. Note that in both cases, this is equivalent to saying we are interested in detecting differences between $p_1$ and $p_2$ larger than $\delta > 0$.</p>
 
 <p>Test creation:</p>
 
 <p>Instance functions</p>
 
 <ul>
-<li><strong>getResults()</strong> : returns results as a dict {}</li>
-<li><strong>pValue()</strong> : returns the simulated p-value</li>
-<li><strong>confInterval()</strong> : returns a confidence interval</li>
-<li><strong>estimate()</strong> : returns whitehead bias-adjusted estimates of p_1, p_2 and p_1-p_2</li>
-<li><strong>getData()</strong> : returns the sequences of data collected so far</li>
-<li><strong>addData()</strong> : add data points. Returns ".." if test is finished</li>
-<li><strong>expectedSamplesize(p_1, p_2)</strong> : simulates the expected sample size needed for true parameters p_1 and p_2</li>
-<li><strong>maxSamplesize()</strong> : returns the worst-case maximum samplesize of this test</li>
-<li><strong>properties()</strong> : returns object with properties of this test, such as alpha, beta, etc.</li>
+<li><em><strong>getResults()</strong></em> : returns an object with sufficient statistics, likelihood ratio statistics, as well as information on whether the test is done.</li>
+<li><em><strong>pValue()</strong></em> : if the test is done, this returns a simulated p-value.</li>
+<li><em><strong>confInterval()</strong></em> : if the test is done, this returns a bootstrap confidence interval of the difference between $p_1$ and $p_2$.</li>
+<li><em><strong>estimate()</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $p_1$, $p_2$ and $p_1 - p_2$ respectively.</li>
+<li><em><strong>getData()</strong></em> : returns two arrays with the sequences of samples of $X$ and $Y$ collected so far.</li>
+<li><em><strong>addData(</strong>{x : 1, y : 1}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"true"</em> ($H_A$ was rejected) or <em>"false"</em> ($H_0$ was rejected) as a string. Note that after the test is finished, the instance will still store new data points added internally, but test statistics and conclusion will not be updated. All stored data points collected can be retrieved via <em>getData()</em>.</li>
+<li><em><strong>expectedSamplesize(</strong>p1, p2<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true parameters $p_1$ and $p_2$.</li>
+<li><em><strong>maxSamplesize()</strong></em> : returns the worst-case maximum samplesize of this test.</li>
+<li><em><strong>properties()</strong></em> : returns an object with properties of this test that were specified on initialization, such as <em>type</em>, <em>sides</em>, <em>indifference size</em>, <em>alpha</em> and <em>beta</em>.</li>
 </ul>
 
-<p>A simple example</p>
+<p>A simple example:</p>
 
-<pre><code>var test = glr.test("bernoulli","two-sided",0.01,0.05,0.10);
+<pre><code>var glr = require('seglir');
+var test = glr.test("bernoulli","two-sided",0.01,0.05,0.10);
 // add data from samples as they come in
-test.add({'x' : 0});
-test.add({'y' : 1});
-test.add({'y' : 1, 'x' : 0});
-// stuff
+test.addData({'x' : 0});
+test.addData({'y' : 1});
+test.addData({'y' : 1, 'x' : 0});
+test.addData({'x' : 0, 'y' : 1});
+test.addData({'y' : 1, 'x' : 0}); // returns result "false", i.e. we reject the null-hypothesis
+// get estimates of p_1, p_2 and p_1-p_2
+test.estimate(); // returns [0, 1, -1]
 </code></pre>
 
-<h2 id="events">Functions</h2>
-
-<p>These are the functions that the <code>headtrackr.Tracker</code> object exposes:</p>
-
-<ul>
-  <li><strong><em>init</em></strong>( <em>video</em>, <em>canvas</em>, <em>setupVideo</em> ) : initialize headtrackr with a video to track faces on.</li>
-    <ul>
-      <li><em>video</em> : a video element to track faces on</li>
-      <li><em>canvas</em> : a canvas element to copy video input to, same size as video</li>
-      <li><em>setupVideo</em> (optional) : whether to automatically set up streaming from webcam (or fallback video) to video element or not. (Default is <em>true</em>)</li>
-    </ul>
-  <li><strong><em>start</em></strong>(  ) : start the tracker. Returns <code>false</code> if the tracker hasn't been initalized first.</li>
-  <li><strong><em>stop</em></strong>( ) : stop the running tracker.</li>
-  <li><strong><em>stopStream</em></strong>( ) : stop the mediastream from webcam if there is one.</li>
-  <li><strong><em>getFOV</em></strong>( ) : get estimated field of view of webcam.</li>
-</ul>
-
+<sup>Footnotes:</sup><br/>
+<sup id="fn1">1. Tartakovsky, Nikiforov, Basseville : Sequential Analysis, CRC press 2014, <a href="http://books.google.no/books?id=zhsbBAAAQBAJ&lpg=PP1&pg=PA254#v=onepage&q&f=false">Theorem 5.4.1</a></sup>
 
 <!--<h3><a href="/">&lsaquo;&nbsp;&nbsp;back&nbsp;</a></h3>-->
 </section>
