@@ -38,14 +38,16 @@
 
 <!--<h2 id="process">Flow</h2>-->
 
-<p>SeGLiR is a javascript implementation of hypothesis testing (aka A/B-testing) via Sequential Generalized Likelihood Ratio Tests. The Sequential Generalized Likelihood Ratio Test is a family of sequential hypothesis test that will stop as soon as we are able to reject a hypothesis, while still keeping type-1 and type-2 error guarantees. Compared to fixed-sample size tests, this usually gives a significant improvement in the needed samplesize, at the cost of some loss of precision in estimates when the test is done. The test has been shown<sup><a href="#fn1">1</a></sup> to be <em>uniformly first-order asymptotically optimal</em> with regard to minimizing samplesize for tests based on a exponential family parameter. For some idea about the difference in expected samplesize, here's numbers from a comparison of bernoulli proportions with a fixed sample-size test and a sequential GLR test, both with $\alpha$ = 0.05, $\beta$ = 0.10 and $\delta$ = 0.01.</p>
+<p>SeGLiR is a javascript implementation of hypothesis testing (aka A/B-testing) with Sequential Generalized Likelihood Ratio Tests. The Sequential Generalized Likelihood Ratio Test is a family of sequential hypothesis test that will stop as soon as we are able to reject a hypothesis, while still keeping type-1 and type-2 error guarantees. Compared to fixed-sample size tests, this usually gives a significant decrease in the needed samplesize, at the cost of some loss of precision in estimates when the test is done. The test has been shown<sup><a href="#fn1">1</a></sup> to be <em>uniformly first-order asymptotically optimal</em> with regard to minimizing samplesize for tests based on a exponential family parameter. For some idea about the difference in expected samplesize, here's numbers from a comparison of bernoulli proportions with a fixed sample-size test and a sequential GLR test, both with $\alpha$-level 0.05, $\beta$-level 0.10 and $\delta$ = 0.01.</p>
 
 <p style="text-align:center">
   <a href="../images/samplesize1.png" rel="lightbox" title="Expected Samplesize"><img src="../images/samplesize1.png" width="400px" height="305px">
   </a>
 </p>
 
-<p>Mathematically, we have one or more variables $X$ with a distribution dependent on some parameter $\theta$. We also have two hypotheses $H_0 : \theta \in \Theta_0$ and $H_A : \theta \in \Theta_A$ and want to find out which is most likely based on data, with some guarantees on the Type-1 and Type-2 errors that are acceptable for the test. Typically there is also a small indifference region between $\Theta_0$ and $\Theta_A$ where we don't care about our type-1 and type-2 guarantees. The test will stop as soon as:</p>
+<h2 id="math">Mathematical details</h2>
+
+<p>Mathematically, we have one or more random variables $X$ with a distribution dependent on some (possible multivariate) parameter $\theta$. We also have two hypotheses $H_0 : \theta \in \Theta_0$ and $H_A : \theta \in \Theta_A$ and want to find out which is most likely based on samples we collect, while keeping some guarantees on how many Type-1 or Type-2 errors we can expect to make. A Sequential GLR test will stop as soon as:</p>
 
 <!--<p>\begin{aligned}
 L_{na} \geq b_0 \;\mathrm{or}\; L_{nb} \geq b_1
@@ -277,14 +279,13 @@ L_{na} \geq b_0 \;\mathrm{or}\; L_{nb} \geq b_1
 </mrow>
 </math>
 
-<p>and $b_0$ and $b_1$ are thresholds precalculated so that the test fulfills the wanted type-1 and type-2 error guarantees. If $L_{na} > b_0$ at the time of stopping, the null hypothesis is rejected (and the alternative hypothesis accepted), while if $L_{nb} > b_1$ the alternative hypothesis is rejected (and the null hypothesis accepted).</p>
+<p>and $b_0$ and $b_1$ are thresholds precalculated so that the test fulfills the wanted type-1 and type-2 error guarantees. If $L_{na} > b_0$ at the time of stopping, the null hypothesis is rejected (and the alternative hypothesis accepted), while if $L_{nb} > b_1$ the alternative hypothesis is rejected (and the null hypothesis accepted). Typically there is also a small predefined indifference region of size $\delta$ between $\Theta_0$ and $\Theta_A$ where we don't care about our type-1 and type-2 error guarantees. This is equivalent to saying that we are only interested in detecting differences larger than $\delta$. Note that there is a tradeoff between $\delta$ and worst-case samplesize - when $\delta$ is small, worst-case samplesize may be large, while if $\delta$ is large, worst-case samplesize may be small.</p>
 
-<p>This library currently implements these types of Sequential GLR tests:</p>
-<ul>
-  <li>Comparing two bernoulli proportions</li>
-  <li>Comparing two gaussian means, with unknown but equal variance</li>
-  <li>Selecting the best arm in a two-armed bandit setting, with δ-PAC guarantees</li>
-</ul>
+<p>Unlike fixed sample-size tests, the thresholds $b_0$ and $b_1$ for a given $\alpha$-level and $\beta$-level are not analytically calculable, therefore simulation has to be used to calculate these thresholds. Since this can be a time-demanding affair, especially when $\delta$ is small, this library includes some precalculated thresholds for the most common $\alpha$- and $\beta$-levels. See below for exactly which.</p>
+
+<p>Note that like all sequential tests with a stopping rule, the usual maximum likelihood estimates of the parameter $\theta$ will be biased. Therefore, this library implements the Whitehead method to bias-correct estimates, which can be called with <em>estimate()</em> when the test is done. Confidence intervals are calculated with bias-adjusted bootstrapping, but note that coverage may be poor for some parts of the parameter space.</p>
+
+<h2>Installation and usage</h2>
 
 <p>It is easiest to install SeGLiR via node package manager (make sure you have node.js installed):</p>
 
@@ -303,17 +304,25 @@ L_{na} \geq b_0 \;\mathrm{or}\; L_{nb} \geq b_1
 
 <p>where <em>type</em> is the type of the test (for instance "bernoulli"), <em>sides</em> is "two-sided" or "one-sided", <em>indifference_size</em> is the size of the indifference region, <em>alpha</em> is the desired type-1 error, and <em>beta</em> is the desired type-2 error. These parameters may vary depending on the type of test, so check documentation for the test type below. Note that in a lot of cases, calculating the thresholds b_0 and b_1 in order to get the wanted type-1 and type-2 error may take a long time, so it's an advantage to select alpha and beta values where the thresholds are precalculated, see this under the specific test.</p>
 
-<p>From the returned instance of the test, you can add datasamples via the function <em>addData()</em>:</p>
+<p>From the returned instance of the test, you can add datasamples via the function <em>addData()</em>:
 
 <pre><code>test.addData({x : 0});
 test.addData({x : 1, y : 0});
 test.addData({y : 0});
 </code></pre>
 
-<p>If this function returns the strings "true" or "false", the test has finished. "true" means the null hypothesis was accepted, while "false" means the alternative hypothesis was accepted. When the test is done, get estimates of the parameters of the test by calling:</p>
+If this function returns the strings "true" or "false", the test has finished. "true" means the null hypothesis was accepted, while "false" means the alternative hypothesis was accepted. When the test is done, get estimates of the parameters of the test by calling:</p>
 
 <pre><code>test.estimate();
 </code></pre>
+
+<p>This library currently implements these types of Sequential GLR tests:</p>
+<ul>
+  <li>Comparing two bernoulli proportions</li>
+  <li>Comparing two gaussian means, with unknown but equal variance</li>
+  <li>Selecting the best arm in a two-armed bandit setting, with δ-PAC guarantees</li>
+</ul>
+<p>There are some differences between the functions for these tests, so consult more detailed reference for each test below.</p>
 
 <h2>Comparison of two bernoulli proportions</h2>
 
