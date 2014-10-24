@@ -3,30 +3,39 @@ SeGLiR
 
 **SeGLiR** is a javascript library for rapid A/B-testing with **Sequential Generalized Likelihood Ratio Tests**.
 
-For a brief explanation of this family of tests, see [this post](http://auduno.com/seglir/). SeGLiR currently contain tests for comparing two bernoulli proportions (for instance for comparing  conversion), but it's also planned to contain tests for comparing two normal means, as well as tests for choosing the best arm in a multi-armed bandit setting with δ-PAC guarantees (ref. Emilie Kaufman).
+Sequential generalized likelihood ratio tests is a family of [sequential hypothesis tests](http://en.wikipedia.org/wiki/Sequential_analysis), i.e. tests that stop as soon as a significant result has been detected in accordance with some stopping rule. Compared to classical fixed sample-size tests, sequential generalized likelihood ratio tests usually give a significant decrease in the needed samplesize, while keeping the same type-1 and type-2 error guarantees. Needed samplesize can be especially small if there is a true difference between the treatments that are compared, which is very helpful when true differences between treatments have significant benefits or costs. For a more detailed explanation of this family of tests, see [the reference](http://auduno.github.io/seglir/documentation.html#math).
 
-There are a number of improvements that can be done to this library, especially relating to the optimization algorithm for estimating a function minimum in two dimensions, so if you feel like helping out, take a look at the (issues)[].
+SeGLiR currently contain tests for comparing two bernoulli proportions (for instance for comparing conversion on a website), comparing two normal means (with equal but unknown variance), as well as tests for choosing the best arm in a multi-armed bandit setting with δ-PAC guarantees.
+
+### Installation ###
+
+The recommended way is to install SeGLiR via node package manager (install node.js if you don't already have it):
+
+```
+npm install seglir
+```
 
 ### Usage ###
 
-Download via node etc. Note that SeGLiR requires 'jStat'.
+If you're not running SeGLiR in node, note that SeGLiR requires 'jStat.js', so put this in the same folder as 'SeGLiR.js'.
 
 ```javascript
 var glr = require(seglir);
-var test = new glr.test("bernoulli","two-sided",0.01,0.05,0.10);
-// collect data
+// create an instance of a two-sided test comparing bernoulli proportions, with indifference region with size 0.01, alpha-level = 0.05, beta-level = 0.10
+var test = new glr.test("bernoulli", "two-sided", 0.01, 0.05, 0.10);
+// add data as it comes in
 ...
-test.add([1,undefined]);
-test.add([0,0]);
-test.add([undefined,1]);
+test.addData({x : 0});
+test.addData({x : 0, y : 0});
+test.addData({y : 1});
 ...
-// when function returns 'true', 'false' or 'undefined' test is concluded
+// when function returns string 'true' or 'false', the test is concluded
 test.getResults()
-// get bias-adjusted estimates 
+// get bias-adjusted estimates
 test.estimates()
 ```
 
-For a complete reference, see -..-
+For a complete details, see the [reference](http://auduno.github.io/seglir/documentation.html#math).
 
 ### Building from source ###
 
