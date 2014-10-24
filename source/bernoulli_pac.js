@@ -1,10 +1,10 @@
 	
 	/*** test for bernoulli proportions, best-arm selection with δ-PAC guarantees ***/
 
-	var bernoulli_pac = function(sides, delta_value) {
+	var bernoulli_pac = function(delta_value) {
 
 		var stoppingTime;
-		var delta_value = delta_value;
+		var delta = delta_value; // the error guarantee we want
 		var x_data = [];
 		var y_data = [];
 		var n = 0;
@@ -178,9 +178,8 @@
 		
 		var checkTest = function(S_x, S_y, n) {
 			// check if test should be stopped
-			
 			var L_an = LikH0(S_x, S_y, n);
-			if (L_an >= log(n)/delta_value) {
+			if (L_an >= Math.log(2*n)/delta) {
 				if (S_x > S_y) {
 					return 'X';
 				} else {
@@ -215,14 +214,24 @@
 
 		// get test variables
 		this.properties = {
-			'delta' : delta_value,
+			'delta' : delta,
 		}
 	}
 
 	// private functions
 
+	var bernoulli_pac_LR_H0 = function(S_x, S_y, n) {
+		var equal_mle = (S_x+S_y)/(2*n);
+		// calculate unconstrained MLE, i.e. p1 and p2 can be unequal 
+		var unc_mle_x = S_x/n;
+		var unc_mle_y = S_y/n;
+
+		var likRatio = Math.exp( (logOp(S_x,unc_mle_x) + logOp(n-S_x,1-unc_mle_x) + logOp(S_y,unc_mle_y) + logOp(n-S_y,1-unc_mle_y)) - (logOp(S_x,equal_mle) + logOp(n-S_x,1-equal_mle) + logOp(S_y,equal_mle) + logOp(n-S_y,1-equal_mle)));
+		return likRatio;
+	}
+
 	functions['bernoulli_pac'] = {
-		'l_an' : bernoulli_twosided_LR_H0, // this is in bernoulli.js
+		'l_an' : bernoulli_pac_LR_H0, // this is in bernoulli.js
 	}
 	
 	tests['bernoulli_pac'] = bernoulli_pac;
