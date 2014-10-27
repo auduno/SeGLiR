@@ -333,7 +333,7 @@ If this function returns the strings "true" or "false", the test has finished. "
 <p>Test instantiation:</p>
 
 <ul>
-<li><strong>test(</strong>"bernoulli", <em>sides</em>, <em>indifference</em>, <em>alpha</em>, <em>beta</em><strong>)</strong><ul>
+<li><em>seglir.</em><strong>test(</strong>"bernoulli", <em>sides</em>, <em>indifference</em>, <em>alpha</em>, <em>beta</em><strong>)</strong><ul>
     <li><em>sides</em> : "one-sided" or "two-sided"</li>
     <li><em>indifference</em> : the value of $\delta$, i.e. the size of the indifference region</li>
     <li><em>alpha</em> : the wanted level of type-1 errors</li>
@@ -376,8 +376,51 @@ test.addData({y : 1, x : 0}); // returns result "false", i.e. we reject the null
 test.estimate(); // returns [0, 1, -1]
 </code></pre>
 
+<h2>Best arm selection with δ-PAC guarantees</h2>
+
+<p>This is a slightly different type of test than those above. We assume we have two arms, a la a multi-armed bandit setting, and want to find out which arm is the best with regard to some parameter. We also want to have some guarantee on how likely we are to make a wrong choice, called δ-PAC guarantee, so that $P(correct choice) = 1 - \delta$. In the setting where we are only interested in pure exploration (as opposed to exploration-exploitation), seq. GLR tests have been shown<sup><a href="#fn2">2</a></sup> to be optimal with regard to samplesize. For more on these tests, see <a href="http://www.di.ens.fr/~kaufmann/TheseEmilie.pdf">[E.Kaufmann]</a>.</p>
+
+<h2>Best arm selection with bernoulli arms</h2>
+
+<p>In these tests we assume that we have two random variables, $X$ and $Y$, where $X$ is bernoulli distributed with unknown parameter $p_1$ and $Y$ is bernoulli distributed with unknown parameter $p_2$, and we want to find which variable has highest $p$. This is equivalent to a two-sided bernoulli test with $\delta = 0$, except $b_0$ is variable instead of fixed. Since $\delta = 0$, note that this test has no worst-case samplesize, and may need a very large amount of samples if $p_1$ and $p_2$ are close to equal.</p>
+
+<p>Test instantiation:</p>
+
+<ul>
+<li><em>seglir.</em><strong>test(</strong>"bernoulli_pac", <em>delta</em>)</strong><ul>
+    <li><em>delta</em> : the wanted error guarantee</li>
+  </ul>
+</li>
+</ul>
+
+<p>Instance functions</p>
+
+<ul>
+<li><em><strong>getResults()</strong></em> : returns an object with sufficient statistics, likelihood ratio statistics, as well as information on whether the test is done.</li>
+<li><em><strong>confInterval()</strong></em> : if the test is done, this returns a bootstrap confidence interval of the difference between $p_1$ and $p_2$.</li>
+<li><em><strong>estimate()</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $p_1$, $p_2$ and $p_1 - p_2$ respectively.</li>
+<li><em><strong>getData()</strong></em> : returns two arrays with the sequences of samples of $X$ and $Y$ collected so far.</li>
+<li><em><strong>addData(</strong>{x : 1, y : 1}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"X"</em> (i.e. $p_1 > p_2$) or <em>"Y"</em> ($p_2 > p_1$) as a string. Note that after the test is finished, the instance will still store new data points added internally, but test statistics and conclusion will not be updated. All stored data points collected can be retrieved via <em>getData()</em>.</li>
+<li><em><strong>expectedSamplesize(</strong>p1, p2<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true parameters $p_1$ and $p_2$.</li>
+<li><em><strong>properties()</strong></em> : returns an object with properties of this test that were specified on initialization, such as <em>type</em>, <em>sides</em>, <em>indifference size</em>, <em>alpha</em> and <em>beta</em>.</li>
+</ul>
+
+<p>A simple example:</p>
+
+<pre><code>var glr = require('seglir');
+var test = glr.test("bernoulli_pac", 0.05);
+// add data from samples as they come in
+test.addData({x : 0});
+test.addData({y : 1});
+test.addData({y : 1, x : 0});
+test.addData({x : 0, y : 1}); // returns result "Y", i.e. p_1 > p_2
+// get estimates of p_1, p_2 and p_1-p_2
+test.estimate(); // returns [0, 1, -1]
+</code></pre>
+
 <sup>Footnotes:</sup><br/>
-<sup id="fn1">1. Tartakovsky, Nikiforov, Basseville : Sequential Analysis, CRC press 2014, <a href="http://books.google.no/books?id=zhsbBAAAQBAJ&lpg=PP1&pg=PA254#v=onepage&q&f=false">Theorem 5.4.1</a></sup>
+<sup id="fn1">1. Tartakovsky, Nikiforov, Basseville : Sequential Analysis, CRC press 2014, <a href="http://books.google.no/books?id=zhsbBAAAQBAJ&lpg=PP1&pg=PA254#v=onepage&q&f=false">Theorem 5.4.1</a></sup><br/>
+<sup id="fn2">2. E. Kaufmann, O. Cappé, A. Garivier : <a href="http://arxiv.org/abs/1407.4443">On the Complexity of Best Arm Identification in Multi-Armed Bandit Models</a>, arXiv 2014</sup>
 
 <!--<h3><a href="/">&lsaquo;&nbsp;&nbsp;back&nbsp;</a></h3>-->
 </section>
