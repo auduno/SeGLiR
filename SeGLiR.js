@@ -1399,18 +1399,6 @@ var glr = function() {
 		}
 
 		// get expected samplesize for some parameters
-		/*this.expectedSamplesize = function(p1, p2, samples) {
-			// simulate it enough times
-			if (!samples) samples = 10000;
-			console.log("calculating expected samplesize via simulation");
-			var times = [];
-			for (var i = 0;i < samples;i++) {
-				var res = simulateResult(p1,p2)
-				times.push(res[3]);
-			}
-			return mean(times);
-		}*/
-
 		this.expectedSamplesize = function(p1, p2, samples) {
 			// simulate it enough times
 			if (!samples) samples = 10000;
@@ -1420,8 +1408,7 @@ var glr = function() {
 				var res = simulateResult(p1,p2)
 				times.push(res[3]);
 			}
-			times.sort(function(a,b){return a-b});
-			return [times[samples*0.05], mean(times), times[samples*0.95]];
+			return mean(times);
 		}
 
 		/** private functions **/
@@ -1444,9 +1431,6 @@ var glr = function() {
 		var checkTest = function(S_x, S_y, n_x, n_y) {
 			// check if test should be stopped
 			var L_an = LikH0(S_x, S_y, n_x, n_y);
-			//var mult = (n_x + n_y)*Math.log(3*(n_x + n_y))*Math.log(3*(n_x + n_y))/delta
-			//if (L_an >= mult*mult) {
-			//if (L_an >= Math.log(n_x + n_y)/delta) {
 			if (L_an >= (Math.log(n_x + n_y)+1)/delta) {
 				if (S_x/n_x > S_y/n_y) {
 					return 'X';
@@ -1480,56 +1464,9 @@ var glr = function() {
 			return [result, S_x, S_y, time];
 		}
 
-		var simulateResult2 = function(p1, p2) {
-			var finished = false;
-			var time = 0;
-			var S_x = 0;
-			var S_y = 0;
-			var t_x = 0;
-			var t_y = 0;
-			var result;
-			var i = 0
-			while (!finished) {
-				if (i % 2 == 0) {
-					S_x += generate(p1);
-					t_x += 1;
-				} else {
-					S_y += generate(p2);
-					t_y += 1;
-				}
-				i += 1;
-				// test it
-				if (i >= 2) {
-					var result = checkTest(S_x, S_y, t_x, t_y);
-					if (result) finished = true;
-				}
-			}
-			return [result, S_x, S_y, t_x, t_y];
-		}
-
 		// get test variables
 		this.properties = {
 			'delta' : delta,
-		}
-
-		this.expectedErrors = function(p1, p2, samples) {
-			// simulate it enough times
-			if (!samples) samples = 10000;
-			console.log("calculating expected errors via simulation");
-			if (p1 < p2) {
-				var truth = "Y";
-			} else {
-				var truth = "X";
-			}
-			var errors = 0;
-			var times = [];
-			for (var i = 0;i < samples;i++) {
-				var res = simulateResult2(p1,p2);
-				if (res[0] != truth) {
-					errors += 1;
-				}
-			}
-			return errors/samples;
 		}
 	}
 
