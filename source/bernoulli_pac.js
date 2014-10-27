@@ -3,11 +3,11 @@
 
 	var bernoulli_pac = function(delta_value) {
 
-		var stoppingTime;
 		var delta = delta_value; // the error guarantee we want
 		var x_data = [];
 		var y_data = [];
-		var n = 0;
+		var n_x = 0;
+		var n_y = 0;
 		var S_x = 0;
 		var S_y = 0;
 		var finished = false;
@@ -16,13 +16,14 @@
 		/** public functions **/
 
 		this.getResults = function() {
-			var L_an = LikH0(S_x, S_y, n);
+			var L_an = LikH0(S_x, S_y, n_x, n_y);
 			return {
 				'S_x' : S_x,
 				'S_y' : S_y,
 				'L_an' : L_an,
 				'finished' : finished,
-				'n' : n
+				'n_x' : n_x,
+				'n_y' : n_y
 			};
 		}
 
@@ -50,7 +51,7 @@
 			var lower_count = 0;
 			for (var i = 0;i < outcomes.length;i++) {
 				outcomes_diff[i] = outcomes[i][0] - outcomes[i][1];
-				if (outcomes_diff[i] < ((S_x/n)-(S_y/n))) lower_count += 1;
+				if (outcomes_diff[i] < ((S_x/n_x)-(S_y/n_y))) lower_count += 1;
 			}
 			//console.log("lower count:"+lower_count)
 			var b = jStat.jStat.normal.inv(lower_count/samples,0,1);
@@ -75,7 +76,7 @@
 			if (!finished) {
 				return undefined;
 			}
-			var ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, 590000, 0.02, 0, 1, false);
+			var ests = optimize2d([S_x/n_x, S_y/n_y], biasFun(), [S_x/n_x, S_y/n_y], 0.005, 16400, 590000, 0.02, 0, 1, false);
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}
@@ -86,8 +87,8 @@
 		}
 		
 		// add single or paired datapoint (control or treatment)
-			// returns true if test is finished
 		this.addData = function(points) {
+			var test = false;
 			if (finished) {
 				if (typeof points[0] === 'number') x_data.push(points[0]);
 				if (typeof points[1] === 'number') y_data.push(points[1]);
@@ -96,56 +97,69 @@
 					if (x_data.length == y_data.length) {
 						S_x += points[0];
 						S_y += points[1];
-						n += 1;
 					} else if (x_data.length > y_data.length) {
 						S_y += points[1];
-						S_x += x_data[n];
-						n += 1;
+						if (x_data.length == y_data.length+1) {
+							S_x += points[0];
+						} else {
+							S_x += x_data[n_x];
+						}
 					} else {
 						S_x += points[0];
-						S_y += y_data[n];
-						n += 1;
+						if (x_data.length+1 == y_data.length) {
+							S_y += points[1];
+						} else {
+							S_y += y_data[n_y];
+						}
 					}
+					n_x += 1;
+					n_y += 1;
+					test = true;
 					x_data.push(points[0])
 					y_data.push(points[1])
 				} else if (typeof points[0] === 'number') {
-					if (x_data.length < y_data.length) {
+					if (x_data.length == y_data.length) {
 						S_x += points[0];
-						S_y += y_data[n];
-						n += 1;
+						test = true;
+						n_x += 1;
+					} else if (x_data.length < y_data.length) {
+						S_x += points[0];
+						test = true;
+						n_x += 1;
+						if (x_data.length+1 != y_data.length) {
+							S_y += y_data[n_y];
+							n_y += 1;
+						}
 					}
 					x_data.push(points[0]);
 				} else if (typeof points[1] === 'number') {
-					if (x_data.length > y_data.length) {
+					if (x_data.length == y_data.length) {
 						S_y += points[1];
-						S_x += x_data[n];
-						n += 1;
-					}
+						test = true;
+						n_y += 1;
+					} else if (x_data.length > y_data.length) {
+						S_y += points[1];
+						test = true;
+						n_y += 1;
+						if (x_data.length != y_data.length+1) {
+							S_x += x_data[n_x];
+							n_x += 1;
+						}
+					} 
 					y_data.push(points[1]);
 				}
 			}
 			
-			var result = checkTest(S_x, S_y, n);
-			if (result) {
-				finished = true;
-				stoppingTime = n;
-				return result;
+			if (test) {
+				var result = checkTest(S_x, S_y, n_x, n_y);
+				if (result) {
+					finished = true;
+					return result;
+				}
 			}
 		}
 
 		// get expected samplesize for some parameters
-		/*this.expectedSamplesize = function(p1, p2, samples) {
-			// simulate it enough times
-			if (!samples) samples = 10000;
-			console.log("calculating expected samplesize via simulation");
-			var times = [];
-			for (var i = 0;i < samples;i++) {
-				var res = simulateResult(p1,p2)
-				times.push(res[3]);
-			}
-			return mean(times);
-		}*/
-
 		this.expectedSamplesize = function(p1, p2, samples) {
 			// simulate it enough times
 			if (!samples) samples = 10000;
@@ -155,8 +169,7 @@
 				var res = simulateResult(p1,p2)
 				times.push(res[3]);
 			}
-			times.sort(function(a,b){return a-b});
-			return [times[samples*0.05], mean(times), times[samples*0.95]];
+			return mean(times);
 		}
 
 		/** private functions **/
@@ -176,11 +189,11 @@
 			return outfun;
 		}
 		
-		var checkTest = function(S_x, S_y, n) {
+		var checkTest = function(S_x, S_y, n_x, n_y) {
 			// check if test should be stopped
-			var L_an = LikH0(S_x, S_y, n);
-			if (L_an >= Math.log(2*n)/delta) {
-				if (S_x > S_y) {
+			var L_an = LikH0(S_x, S_y, n_x, n_y);
+			if (L_an >= (Math.log(n_x + n_y)+1)/delta) {
+				if (S_x/n_x > S_y/n_y) {
 					return 'X';
 				} else {
 					return 'Y';
@@ -206,27 +219,74 @@
 				S_y += generate(p2);
 				time += 1;
 				// test it
-				var result = checkTest(S_x, S_y, time);
+				var result = checkTest(S_x, S_y, time, time);
 				if (result) finished = true;
 			}
 			return [result, S_x, S_y, time];
+		}
+
+		var simulateResult2 = function(p1, p2) {
+			var finished = false;
+			var time = 0;
+			var S_x = 0;
+			var S_y = 0;
+			var t_x = 0;
+			var t_y = 0;
+			var result;
+			var i = 0
+			while (!finished) {
+				if (i % 2 == 0) {
+					S_x += generate(p1);
+					t_x += 1;
+				} else {
+					S_y += generate(p2);
+					t_y += 1;
+				}
+				i += 1;
+				// test it
+				if (i >= 2) {
+					var result = checkTest(S_x, S_y, t_x, t_y);
+					if (result) finished = true;
+				}
+			}
+			return [result, S_x, S_y, t_x, t_y];
 		}
 
 		// get test variables
 		this.properties = {
 			'delta' : delta,
 		}
+
+		this.expectedErrors = function(p1, p2, samples) {
+			// simulate it enough times
+			if (!samples) samples = 10000;
+			console.log("calculating expected errors via simulation");
+			if (p1 < p2) {
+				var truth = "Y";
+			} else {
+				var truth = "X";
+			}
+			var errors = 0;
+			var times = [];
+			for (var i = 0;i < samples;i++) {
+				var res = simulateResult2(p1,p2);
+				if (res[0] != truth) {
+					errors += 1;
+				}
+			}
+			return errors/samples;
+		}
 	}
 
 	// private functions
 
-	var bernoulli_pac_LR_H0 = function(S_x, S_y, n) {
-		var equal_mle = (S_x+S_y)/(2*n);
+	var bernoulli_pac_LR_H0 = function(S_x, S_y, n_x, n_y) {
+		var equal_mle = (S_x+S_y)/(n_x + n_y);
 		// calculate unconstrained MLE, i.e. p1 and p2 can be unequal 
-		var unc_mle_x = S_x/n;
-		var unc_mle_y = S_y/n;
+		var unc_mle_x = S_x/n_x;
+		var unc_mle_y = S_y/n_y;
 
-		var likRatio = Math.exp( (logOp(S_x,unc_mle_x) + logOp(n-S_x,1-unc_mle_x) + logOp(S_y,unc_mle_y) + logOp(n-S_y,1-unc_mle_y)) - (logOp(S_x,equal_mle) + logOp(n-S_x,1-equal_mle) + logOp(S_y,equal_mle) + logOp(n-S_y,1-equal_mle)));
+		var likRatio = Math.exp( (logOp(S_x,unc_mle_x) + logOp(n_x-S_x,1-unc_mle_x) + logOp(S_y,unc_mle_y) + logOp(n_y-S_y,1-unc_mle_y)) - (logOp(S_x,equal_mle) + logOp(n_x-S_x,1-equal_mle) + logOp(S_y,equal_mle) + logOp(n_y-S_y,1-equal_mle)));
 		return likRatio;
 	}
 
