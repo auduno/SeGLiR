@@ -225,56 +225,9 @@
 			return [result, S_x, S_y, time];
 		}
 
-		var simulateResult2 = function(p1, p2) {
-			var finished = false;
-			var time = 0;
-			var S_x = 0;
-			var S_y = 0;
-			var t_x = 0;
-			var t_y = 0;
-			var result;
-			var i = 0
-			while (!finished) {
-				if (i % 2 == 0) {
-					S_x += generate(p1);
-					t_x += 1;
-				} else {
-					S_y += generate(p2);
-					t_y += 1;
-				}
-				i += 1;
-				// test it
-				if (i >= 2) {
-					var result = checkTest(S_x, S_y, t_x, t_y);
-					if (result) finished = true;
-				}
-			}
-			return [result, S_x, S_y, t_x, t_y];
-		}
-
 		// get test variables
 		this.properties = {
 			'delta' : delta,
-		}
-
-		this.expectedErrors = function(p1, p2, samples) {
-			// simulate it enough times
-			if (!samples) samples = 10000;
-			console.log("calculating expected errors via simulation");
-			if (p1 < p2) {
-				var truth = "Y";
-			} else {
-				var truth = "X";
-			}
-			var errors = 0;
-			var times = [];
-			for (var i = 0;i < samples;i++) {
-				var res = simulateResult2(p1,p2);
-				if (res[0] != truth) {
-					errors += 1;
-				}
-			}
-			return errors/samples;
 		}
 	}
 
