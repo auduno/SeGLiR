@@ -269,7 +269,7 @@
 			console.log("calculating thresholds via simulation")
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [50,10], 0.001, 46000, 400000, 6, 1)
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [98,14.5], 0.001, 46000, 1500000, 6, 1)
-			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [65,65], 0.001, 46000, 1500000, 6, 1)
+			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [90,90], 0.001, 46000, 1500000, 6, 1)
 			b0 = thr[0];
 			b1 = thr[1];
 		}
@@ -695,7 +695,7 @@
 		var D_neg = roundToZero(1-neg+indiff);
 		var neg_llik = logOp(S_x,A_neg) + logOp(n-S_x,B_neg) + logOp(S_y,C_neg) + logOp(n-S_y,D_neg);
 
-		if (pos_llik > neg_llik) {
+		if (pos_llik < neg_llik) {
 			return Math.exp( logOp(S_x,unc_mle_x) + logOp(n-S_x,1-unc_mle_x) + logOp(S_y,unc_mle_y) + logOp(n-S_y,1-unc_mle_y) - pos_llik );
 		} else {
 			return Math.exp( logOp(S_x,unc_mle_x) + logOp(n-S_x,1-unc_mle_x) + logOp(S_y,unc_mle_y) + logOp(n-S_y,1-unc_mle_y) - neg_llik );
@@ -779,16 +779,17 @@
 		var unc_mle_x = S_x/n;
 		var unc_mle_y = S_y/n;
 
-		if (unc_mle_x-unc_mle_y <= -indiff/2) {
+		if (unc_mle_x-unc_mle_y <= -indiff) {
 			return 1;
 		}
 		
-		var pos = solveConstrainedBinomialMLE(S_x, S_y, n, indiff/2);
+		// p1 = p2 - indiff
+		var pos = solveConstrainedBinomialMLE(S_x, S_y, n, indiff);
 
 		var A_pos = roundToZero(pos);
 		var B_pos = roundToZero(1-pos);
-		var C_pos = roundToZero(pos + indiff/2);
-		var D_pos = roundToZero(1-pos-indiff/2);
+		var C_pos = roundToZero(pos + indiff);
+		var D_pos = roundToZero(1-pos-indiff);
 		var pos_llik = logOp(S_x,A_pos) + logOp(n-S_x,B_pos) + logOp(S_y,C_pos) + logOp(n-S_y,D_pos);
 
 		return Math.exp( logOp(S_x,unc_mle_x) + logOp(n-S_x,1-unc_mle_x) + logOp(S_y,unc_mle_y) + logOp(n-S_y,1-unc_mle_y) - pos_llik );
@@ -800,16 +801,17 @@
 		var unc_mle_x = S_x/n;
 		var unc_mle_y = S_y/n;
 
-		if (unc_mle_x-unc_mle_y >= indiff/2) {
+		if (unc_mle_x-unc_mle_y >= indiff) {
 			return 1;
 		}
 		
-		var neg = solveConstrainedBinomialMLE(S_x, S_y, n, -indiff/2);
+		// p1 = p2 + indiff
+		var neg = solveConstrainedBinomialMLE(S_x, S_y, n, -indiff);
 
 		var A_neg = roundToZero(neg);
 		var B_neg = roundToZero(1-neg);
-		var C_neg = roundToZero(neg - indiff/2);
-		var D_neg = roundToZero(1-neg+indiff/2);
+		var C_neg = roundToZero(neg - indiff);
+		var D_neg = roundToZero(1-neg+indiff);
 		var neg_llik = logOp(S_x,A_neg) + logOp(n-S_x,B_neg) + logOp(S_y,C_neg) + logOp(n-S_y,D_neg);
 
 		return Math.exp( logOp(S_x,unc_mle_x) + logOp(n-S_x,1-unc_mle_x) + logOp(S_y,unc_mle_y) + logOp(n-S_y,1-unc_mle_y) - neg_llik );
@@ -940,23 +942,23 @@
 		'two-sided' : {
 			0.05 : {
 				0.10 : {
-					0.4 : [68.6, 12.9],
-					0.2 : [98, 14.6],
-					0.1 : [139, 14.5],
-					0.05 : [172, 15.5],
-					0.025 : [220, 15.5],
-					0.01 : [255, 15.7],
+					0.4 : [68.6, 12.9], // check
+					0.2 : [98, 14.6], // check
+					0.1 : [139, 14.5], // check
+					0.05 : [172, 15.5], // check
+					0.025 : [220, 15.5], // check
+					0.01 : [255, 15.7], // check
 				}
 			}
 		},
 		'one-sided' : {
 			0.05 : {
 				0.05 : {
-					0.2 : [10.9, 10.9],
-					0.1 : [19.7, 19.7],
-					0.05 : [26, 26],
-					0.025 : [44.5, 44.5],
-					0.01 : [67,67]
+					0.2 : [39.1, 39.1],
+					0.1 : [42, 42],
+					0.05 : [70, 70],
+					0.025 : [77, 77],
+					0.01 : [95,95]
 				}
 			}
 		}

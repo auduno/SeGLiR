@@ -8,6 +8,7 @@ module.exports = function(grunt) {
             'source/head.js',
             'source/bernoulli.js',
             'source/bernoulli_pac.js',
+            'source/normal_uv.js',
             'source/tail.js'],
         dest: './SeGLiR.js' 
       }
