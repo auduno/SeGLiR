@@ -867,6 +867,7 @@ var glr = function() {
 	// private functions
 
 	var solveConstrainedBinomialMLE = function(S_x, S_y, n, d) {
+		// solves MLE of p1 with the constraint that p1 = p2 - d
 		var a = (3*d*n - S_x - S_y - 2*n);
 		var b = (S_x - 2*d*S_x + S_y - 2*d*n + d*d*n);
 		var P = -a/(6*n);
@@ -954,8 +955,9 @@ var glr = function() {
 			return 1;
 		}
 		
-		var pos = solveConstrainedBinomialMLE(S_x, S_y, n, indiff);
-		var neg = solveConstrainedBinomialMLE(S_x, S_y, n, -indiff);
+		// find mle of p1 with constrain that |p1-p2| = d
+		var pos = solveConstrainedBinomialMLE(S_x, S_y, n, indiff); // solves MLE of p1 with the constraint that p1 = p2 - d
+		var neg = solveConstrainedBinomialMLE(S_x, S_y, n, -indiff); // solves MLE of p1 with the constraint that p1 = p2 + d
 
 		var A_pos = roundToZero(pos);
 		var B_pos = roundToZero(1-pos);
@@ -968,8 +970,8 @@ var glr = function() {
 		var C_neg = roundToZero(neg - indiff);
 		var D_neg = roundToZero(1-neg+indiff);
 		var neg_llik = logOp(S_x,A_neg) + logOp(n-S_x,B_neg) + logOp(S_y,C_neg) + logOp(n-S_y,D_neg);
-
-		if (pos_llik < neg_llik) {
+		
+		if (pos_llik > neg_llik) {
 			return Math.exp( logOp(S_x,unc_mle_x) + logOp(n-S_x,1-unc_mle_x) + logOp(S_y,unc_mle_y) + logOp(n-S_y,1-unc_mle_y) - pos_llik );
 		} else {
 			return Math.exp( logOp(S_x,unc_mle_x) + logOp(n-S_x,1-unc_mle_x) + logOp(S_y,unc_mle_y) + logOp(n-S_y,1-unc_mle_y) - neg_llik );
@@ -1058,7 +1060,7 @@ var glr = function() {
 		}
 		
 		// p1 = p2 - indiff
-		var pos = solveConstrainedBinomialMLE(S_x, S_y, n, indiff);
+		var pos = solveConstrainedBinomialMLE(S_x, S_y, n, indiff); // solves MLE of p1 with the constraint that p1 = p2 - d, i.e. p1 <= p2 - d
 
 		var A_pos = roundToZero(pos);
 		var B_pos = roundToZero(1-pos);
@@ -1216,12 +1218,12 @@ var glr = function() {
 		'two-sided' : {
 			0.05 : {
 				0.10 : {
-					0.4 : [68.6, 12.9], // check
-					0.2 : [98, 14.6], // check
-					0.1 : [139, 14.5], // check
-					0.05 : [172, 15.5], // check
-					0.025 : [220, 15.5], // check
-					0.01 : [255, 15.7], // check
+					0.4 : [68.6, 12.9], 
+					0.2 : [98, 14.6], 
+					0.1 : [139, 14.5],
+					0.05 : [172, 15.5], 
+					0.025 : [220, 15.5], 
+					0.01 : [255, 15.7]
 				}
 			}
 		},
