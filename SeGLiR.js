@@ -1844,17 +1844,17 @@ var glr = function() {
 			return 1;
 		}
 		
-		var pos = 0.5*(unc_mle_x + unc_mle_y + indiff); 
-		var neg = 0.5*(unc_mle_x + unc_mle_y - indiff);
+		var pos = 0.5*(unc_mle_x + unc_mle_y + indiff); // mle of mu_1 when constrained so mu_1 = mu_2 + d
+		var neg = 0.5*(unc_mle_x + unc_mle_y - indiff); // mle of mu_1 when constrained so mu_1 = mu_2 - d
 
-		var pos_llik = S_x2 - 2*pos*S_x + n*pos*pos + S_y2 - 2*S_y*(pos-indiff) + n*(pos-indiff)*(pos-indiff);
-		var neg_llik = S_x2 - 2*neg*S_x + n*neg*neg + S_y2 - 2*S_y*(neg+indiff) + n*(neg+indiff)*(neg+indiff);
+		var pos_lik_part = S_x2 - 2*pos*S_x + n*pos*pos + S_y2 - 2*S_y*(pos-indiff) + n*(pos-indiff)*(pos-indiff);
+		var neg_lik_part = S_x2 - 2*neg*S_x + n*neg*neg + S_y2 - 2*S_y*(neg+indiff) + n*(neg+indiff)*(neg+indiff);
 
-		var mle_llik = Math.log(S_x2 - n*unc_mle_x*unc_mle_x + S_y2 - n*unc_mle_y*unc_mle_y );
-		if (pos_llik > neg_llik) {
-			return Math.exp( n*(Math.log(pos_llik) - mle_llik) );
+		var mle_lik_part = Math.log(S_x2 - n*unc_mle_x*unc_mle_x + S_y2 - n*unc_mle_y*unc_mle_y );
+		if (pos_lik_part < neg_lik_part) {
+			return Math.exp( n*(Math.log(pos_lik_part) - mle_lik_part) );
 		} else {
-			return Math.exp( n*(Math.log(neg_llik) - mle_llik) );
+			return Math.exp( n*(Math.log(neg_lik_part) - mle_lik_part) );
 		}
 	}
 
@@ -1907,7 +1907,7 @@ var glr = function() {
 			return 1;
 		}
 		
-		var neg = 0.5*(unc_mle_x + unc_mle_y - indiff);
+		var neg = 0.5*(unc_mle_x + unc_mle_y - indiff); 
 		var neg_llik = S_x2 - 2*neg*n*unc_mle_x + n*neg*neg + S_y2 - 2*n*unc_mle_y*(neg+indiff) + n*(neg+indiff)*(neg+indiff);
 		var mle_llik = Math.log(S_x2 - n*unc_mle_x*unc_mle_x + S_y2 - n*unc_mle_y*unc_mle_y );
 
@@ -1925,7 +1925,7 @@ var glr = function() {
 			return 1;
 		}
 		
-		var pos = 0.5*(unc_mle_x + unc_mle_y + indiff);
+		var pos = 0.5*(unc_mle_x + unc_mle_y + indiff); // mle of mu_1 when constrained so mu_1 = mu_2 + d
 		var pos_llik = S_x2 - 2*pos*n*unc_mle_x + n*pos*pos + S_y2 - 2*n*unc_mle_y*(pos-indiff) + n*(pos-indiff)*(pos-indiff);
 		var mle_llik = Math.log(S_x2 - n*unc_mle_x*unc_mle_x + S_y2 - n*unc_mle_y*unc_mle_y );
 
