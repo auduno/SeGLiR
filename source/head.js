@@ -11,7 +11,7 @@ var glr = function() {
 
 	this.test = function(type) {
 		if (type in tests) {
-			return new tests[type](arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+			return new tests[type](arguments[1], arguments[2], arguments[3], arguments[4], arguments[5], arguments[6]);
 		} else {
 			console.log("No test of type '"+type+"'.");
 		}

@@ -28,9 +28,8 @@
 				return;
 			}
 		} else if (typeof(variance) != 'number' || variance <= 0) {
-				console.log("when parameter 'variance' is specified, it must be a valid variance, i.e. number above 0, input was : "+variance);
-				return;
-			}
+			console.log("when parameter 'variance' is specified, it must be a valid variance, i.e. number above 0, input was : "+variance);
+			return;
 		}
 
 		var x_data = [];
@@ -56,8 +55,8 @@
 		/** public functions **/
 
 		this.getResults = function() {
-			var L_an = LikH0(S_x, S_y, S_x2, S_y2, n, indiff);
-			var L_bn = LikHA(S_x, S_y, S_x2, S_y2, n, indiff);
+			var L_an = LikH0(S_x, S_y, S_x2, S_y2, n, indiff, var_value);
+			var L_bn = LikHA(S_x, S_y, S_x2, S_y2, n, indiff, var_value);
 			return {
 				'S_x' : S_x,
 				'S_y' : S_y,
@@ -253,11 +252,11 @@
 			
 			// TODO : should I check for when both L_an and L_bn pass thresholds?
 
-			var L_an = LikH0(S_x, S_y, S_x2, S_y2, n, d);
+			var L_an = LikH0(S_x, S_y, S_x2, S_y2, n, d, var_value);
 			if (L_an >= b0) {
 				return ['false',L_an];
 			}
-			var L_bn = LikHA(S_x, S_y, S_x2, S_y2, n, d);
+			var L_bn = LikHA(S_x, S_y, S_x2, S_y2, n, d, var_value);
 			if (L_bn >= b1) {
 				return ['true',L_an]
 			}
@@ -319,12 +318,14 @@
 
 		if (var_value) {
 			var our_thresholds = thresholds['normal_kv'];
+			var our_var = var_value;
 		} else {
 			var our_thresholds = thresholds['normal_uv'];
+			var our_var = var_bound;
 		}
 		if (sides in our_thresholds && alpha_value in our_thresholds[sides] && beta_value in our_thresholds[sides][alpha_value] && indifference in our_thresholds[sides][alpha_value][beta_value]) {
-			b0 = our_thresholds[sides][alpha_value][beta_value][indifference][var_bound][0];
-			b1 = our_thresholds[sides][alpha_value][beta_value][indifference][var_bound][1];
+			b0 = our_thresholds[sides][alpha_value][beta_value][indifference][our_var][0];
+			b1 = our_thresholds[sides][alpha_value][beta_value][indifference][our_var][1];
 		} else {
 			// calculate thresholds
 			console.log("calculating thresholds via simulation")
@@ -338,7 +339,7 @@
 		// TODO : implement this for known variance
 		//this.maxSamplesize = functions['normal_uv'][sides]['max_samplesize'](b0,b1,indiff);
 		if (var_value) {
-			var simulateH0 = functions['normal_kv'][sides]['simulateH0'](simulateResult, indiff, b0, b1, var_bound);
+			var simulateH0 = functions['normal_kv'][sides]['simulateH0'](simulateResult, indiff, b0, b1, var_value);
 		} else {
 			var simulateH0 = functions['normal_uv'][sides]['simulateH0'](simulateResult, indiff, b0, b1, var_bound);
 		}
@@ -506,7 +507,7 @@
 		return returnFun;
 	}
 
-	var normal_kv_twosided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff) {
+	var normal_kv_twosided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff, var_value) {
 		if (n == 1) {
 			return 1;
 		}
@@ -518,7 +519,7 @@
 		return likRatio;
 	}
 
-	var normal_kv_twosided_LR_HA = function(S_x, S_y, S_x2, S_y2, n, indiff) {
+	var normal_kv_twosided_LR_HA = function(S_x, S_y, S_x2, S_y2, n, indiff, var_value) {
 		if (n == 1) {
 			return 1;
 		}
@@ -543,7 +544,7 @@
 		}
 	}
 
-	var normal_kv_onesided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff) {
+	var normal_kv_onesided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff, var_value) {
 		// H0 is that mu_1 < mu_2 -indiff -> mu_1 = mu_2 - indiff
 		if (n == 1) {
 			return 1;
@@ -562,7 +563,7 @@
 		return Math.exp( 1/(2*var_value)*(neg_lik_part - mle_lik_part) );
 	}
 
-	var normal_uv_onesided_LR_HA = function(S_x, S_y, S_x2, S_y2, n, indiff) {
+	var normal_kv_onesided_LR_HA = function(S_x, S_y, S_x2, S_y2, n, indiff, var_value) {
 		if (n == 1) {
 			return 1;
 		}
@@ -639,7 +640,7 @@
 			0.05 : { // alpha
 				0.10 : { // beta
 					0.1 : { // indifference
-						1 : [430, 8.85], // TODO : calculate these
+						1 : [140, 16.9], // variance, TODO : get more approximate results
 					}
 				}
 			}
@@ -648,7 +649,7 @@
 			0.05 : { // alpha
 				0.05 : { // beta
 					0.1 : { // indifference
-						1 : [135, 135], // TODO : calculate these
+						1 : [49, 49], // variance, TODO : get more approximate results
 					}
 				}
 			}
