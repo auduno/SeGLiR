@@ -1742,6 +1742,7 @@ var glr = function() {
 		var LikH0 = functions['normal_uv'][sides]['l_an'];
 		this.LikH0 = LikH0;
 		var LikHA = functions['normal_uv'][sides]['l_bn'];
+		this.LikHA = LikHA;
 
 		var boundaryFun = function(indiff) {
 			// simulate alpha and beta-value
@@ -1903,11 +1904,11 @@ var glr = function() {
 		var unc_mle_x = S_x/n;
 		var unc_mle_y = S_y/n;
 
-		if (unc_mle_x-unc_mle_y <= indiff) {
+		if (unc_mle_x-unc_mle_y <= -indiff) {
 			return 1;
 		}
 		
-		var neg = 0.5*(unc_mle_x + unc_mle_y - indiff); 
+		var neg = 0.5*(unc_mle_x + unc_mle_y - indiff); // mle of mu_1 when constrained so mu_1 = mu_2 - d -> mu_1 <= mu_2 - d -> mu_1 - mu_2 <= - d
 		var neg_llik = S_x2 - 2*neg*n*unc_mle_x + n*neg*neg + S_y2 - 2*n*unc_mle_y*(neg+indiff) + n*(neg+indiff)*(neg+indiff);
 		var mle_llik = Math.log(S_x2 - n*unc_mle_x*unc_mle_x + S_y2 - n*unc_mle_y*unc_mle_y );
 
@@ -1925,7 +1926,7 @@ var glr = function() {
 			return 1;
 		}
 		
-		var pos = 0.5*(unc_mle_x + unc_mle_y + indiff); // mle of mu_1 when constrained so mu_1 = mu_2 + d
+		var pos = 0.5*(unc_mle_x + unc_mle_y + indiff); // mle of mu_1 when constrained so mu_1 = mu_2 + d -> mu_1 >= mu_2 + d -> mu_1 - mu_2 >= d
 		var pos_llik = S_x2 - 2*pos*n*unc_mle_x + n*pos*pos + S_y2 - 2*n*unc_mle_y*(pos-indiff) + n*(pos-indiff)*(pos-indiff);
 		var mle_llik = Math.log(S_x2 - n*unc_mle_x*unc_mle_x + S_y2 - n*unc_mle_y*unc_mle_y );
 
@@ -1970,9 +1971,9 @@ var glr = function() {
 		},
 		'one-sided' : {
 			0.05 : { // alpha
-				0.10 : { // beta
+				0.05 : { // beta
 					0.1 : { // indifference
-						1 : [50, 50], // variance bound
+						1 : [120, 120], // variance bound
 					}
 				}
 			}
