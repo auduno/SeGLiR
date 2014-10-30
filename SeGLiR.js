@@ -2189,7 +2189,7 @@ var glr = function() {
 				'S_y2' : S_y2,
 				'L_an' : L_an,
 				'finished' : finished,
-				'n_x' : n_x
+				'n_x' : n_x,
 				'n_y' : n_y
 			};
 		}
@@ -2218,7 +2218,7 @@ var glr = function() {
 			var lower_count = 0;
 			for (var i = 0;i < outcomes.length;i++) {
 				outcomes_diff[i] = outcomes[i][0] - outcomes[i][1];
-				if (outcomes_diff[i] < ((S_x/n)-(S_y/n))) lower_count += 1;
+				if (outcomes_diff[i] < ((S_x/n_x)-(S_y/n_y))) lower_count += 1;
 			}
 			//console.log("lower count:"+lower_count)
 			var b = jStat.jStat.normal.inv(lower_count/samples,0,1);
@@ -2243,7 +2243,7 @@ var glr = function() {
 			if (!finished) {
 				return undefined;
 			}
-			var ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, 590000, 0.02, 0, 1, false);
+			var ests = optimize2d([S_x/n_x, S_y/n_y], biasFun(), [S_x/n_x, S_y/n_y], 0.005, 16400, 590000, 0.02, 0, 1, false);
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}
@@ -2376,9 +2376,11 @@ var glr = function() {
 			
 			var L_an = LikH0(S_x, S_y, S_x2, S_y2, n_x, n_y, var_value);
 			// better threshold
-			var threshold = -Math.log(delta) + (3/4)*Math.log(-Math.log(delta)) + (3/2)*Math.log(1+Math.log( (n_x+n_y)/2 ));
+			//var threshold = -Math.log(delta) + (3/4)*Math.log(-Math.log(delta)) + (3/2)*Math.log(1+Math.log( (n_x+n_y)/2 ));
+			var threshold = Math.pow((n_x+n_y+1)/(2*delta),(n_x+n_y+1)/(n_x+n_y));
 			// worse threshold ? 
 			//var threshold = ((n_x + n_y + 1)/(n_x + n_y))*Math.log((n_x + n_y + 1)/(2*delta));
+			//var threshold = (1/delta)*Math.pow(-Math.log(delta),3/4)*Math.pow(1+Math.log((n_x+n_y)/2),3/2)
 			if (L_an >= threshold) {
 				if (S_x/n_x > S_y/n_y) {
 					return 'X';
@@ -2411,19 +2413,57 @@ var glr = function() {
 			'delta' : delta,
 			'variance' : var_value
 		}
+
+		this.checkErrors = function(mu_1, mu_2, samples) {
+			var errs = 0;
+			if (mu_1 < mu_2) {
+				var truth = "Y";
+			} else {
+				var truth = "X";
+			}
+			for (var i = 0;i < samples;i++) {
+				var S_x = 0;
+				var S_y = 0;
+				var S_x2 = 0;
+				var S_y2 = 0;
+				var n_x = 0;
+				var n_y = 0;
+				var finished = false;
+				while (!finished) {
+					// generate samples
+					var data_1 = generate([mu_1,var_value]);
+					var data_2 = generate([mu_2,var_value]);
+					n_x += 1;
+					n_y += 1;
+					S_x += data_1;
+					S_y += data_2;
+					S_x2 += data_1*data_1;
+					S_y2 += data_2*data_2;
+					// test
+					var res = checkTest(S_x, S_y, S_x2, S_y2, n_x, n_y)
+					if (res) {
+						if (res != truth) {
+							errs += 1;
+						}
+						finished = true;
+					}
+				}
+			}
+			return errs/samples;
+		}
 	}
 
 	// private functions
 
 	var normal_pac_LR_H0 = function(S_x, S_y, S_x2, S_y2, n_x, n_y, var_value) {
-		if (n == 1) {
+		if (n_x <= 1 || n_y <= 1) {
 			return 1;
 		}
-		var mle_mean = (S_x + S_y)/(2*n);
-		var mle_x = S_x/n;
-		var mle_y = S_y/n;
+		var mle_mean = (S_x + S_y)/(n_x + n_y);
+		var mle_x = S_x/n_x;
+		var mle_y = S_y/n_y;
 
-		var likRatio = Math.exp(n/(2*var_value) * (0.5*mle_x*mle_x + 0.5*mle_y*mle_y - mle_x*mle_y));
+		var likRatio = Math.exp((n_x+n_y)/(2*2*var_value) * (0.5*mle_x*mle_x + 0.5*mle_y*mle_y - mle_x*mle_y));
 		return likRatio;
 	}
 
