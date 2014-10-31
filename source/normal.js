@@ -323,7 +323,7 @@
 			var our_thresholds = thresholds['normal_uv'];
 			var our_var = var_bound;
 		}
-		if (sides in our_thresholds && alpha_value in our_thresholds[sides] && beta_value in our_thresholds[sides][alpha_value] && indifference in our_thresholds[sides][alpha_value][beta_value]) {
+		if (sides in our_thresholds && alpha_value in our_thresholds[sides] && beta_value in our_thresholds[sides][alpha_value] && indifference in our_thresholds[sides][alpha_value][beta_value] && our_var in our_thresholds[sides][alpha_value][beta_value][indifference]) {
 			b0 = our_thresholds[sides][alpha_value][beta_value][indifference][our_var][0];
 			b1 = our_thresholds[sides][alpha_value][beta_value][indifference][our_var][1];
 		} else {
@@ -331,7 +331,7 @@
 			console.log("calculating thresholds via simulation")
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [50,10], 0.001, 46000, 400000, 6, 1)
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [98,14.5], 0.001, 46000, 1500000, 6, 1)
-			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [10.9,10.9], 0.001, 46000, 1500000, 6, 1)
+			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [200,8.9], 0.001, 46000, 1500000, 6, 1)
 			b0 = thr[0];
 			b1 = thr[1];
 		}
@@ -362,6 +362,7 @@
 	var normal_twosided_alpha = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
 		var alphas = [];
+		//var starttime = (new Date()).getTime();
 		for (var i = 0;i < samples;i++) {
 			var res = simulateResult([0,var_val],[0,var_val],b0,b1);
 			if (res[0] == 'false') {
@@ -370,6 +371,71 @@
 				alphas.push(0);
 			}
 		}
+		//console.log("time:"+( (new Date()).getTime()-starttime ))
+		//console.log("mean:"+mean(alphas));
+		//console.log("std_err:"+boot_std(alphas,1000));
+		return alphas;
+		// TODO : should we include std.dev.?
+	}
+
+	var normal_twosided_alpha_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
+		if (!samples) samples = 10000;
+		var alphas = [];
+		var beta = 10;
+		var starttime = (new Date()).getTime();
+		for (var i = 0;i < samples;i++) {
+			var mu_1 = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
+			var mu_2 = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
+			var res = simulateResult([mu_1,var_val],[mu_2,var_val],b0,b1);
+			if (res[0] == 'false') {
+				var S_x = res[1];
+				var S_y = res[2];
+				var time = res[5];
+				var bv = beta*var_val;
+				
+				//var weight = (bv/(time+bv))*Math.exp((1/var_val)*((S_x*S_x - 2*S_x*S_y + S_y*S_y)/(2*(time+bv))));
+				var weight = (bv/(time+bv))*Math.exp((1/var_val)*((S_x*S_x + S_y*S_y)/(2*(time+bv))));
+				//var weight = (bv/(time+bv))*Math.exp((1/var_val) * ( -(S_x + S_y)*(S_x + S_y)/(4*time) + (S_x*S_x + S_y*S_y)/(2*(time+bv)) ));
+				
+				//var weight = beta/(2*time + beta)*Math.exp( (S_x*S_x + S_y*S_y)/(time + 0.5*beta) - (S_x + S_y)*(S_x + S_y)/(2*time) );
+				//var weight = Math.sqrt(beta/(time+beta))*Math.exp(time*time* ((S_x-S_y)/(2*time))*((S_x-S_y)/(2*time)) / (2*(time+beta)));
+				alphas.push(1/weight);
+			} else {
+				alphas.push(0);
+			}
+		}
+		console.log("time:"+( (new Date()).getTime()-starttime ))
+		console.log("mean:"+mean(alphas));
+		console.log("std_err:"+boot_std(alphas,1000));
+		return alphas;
+		// TODO : should we include std.dev.?
+	}
+
+	var normal_twosided_alpha_imp2 = function(b0, b1, indiff, var_val, simulateResult, samples) {
+		if (!samples) samples = 10000;
+		var alphas = [];
+		var beta = 1; // precision/inverse-variance of the importance sampling distribution
+		//var starttime = (new Date()).getTime();
+		for (var i = 0;i < samples;i++) {
+			var z = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
+			var mu_1 = -z/2;
+			var mu_2 = z/2;
+			var res = simulateResult([mu_1,var_val],[mu_2,var_val],b0,b1);
+			if (res[0] == 'false') {
+				var S_x = res[1];
+				var S_y = res[2];
+				var time = res[5];
+				var b2v = 2*beta*var_val;
+				
+				var weight = (Math.sqrt(b2v)/Math.sqrt(time + b2v))*Math.exp( (S_y-S_x)*(S_y-S_x)/(4*var_val*(time+b2v)) );
+				alphas.push(1/weight);
+			} else {
+				alphas.push(0);
+			}
+		}
+		//console.log("time:"+( (new Date()).getTime()-starttime ))
+		//console.log("mean:"+mean(alphas));
+		//console.log("std_err:"+boot_std(alphas,1000));
 		return alphas;
 		// TODO : should we include std.dev.?
 	}
@@ -377,14 +443,99 @@
 	var normal_twosided_beta = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
 		var betas = [];
+		var starttime = (new Date()).getTime();
 		for (var i = 0;i < samples;i++) {
-			var res = simulateResult([0-indiff/2,var_val],[0+indiff/2,var_val],b0,b1);
+			var res = simulateResult([-indiff/2,var_val],[indiff/2,var_val],b0,b1);
 			if (res[0] == 'true') {
 				betas.push(1);
 			} else {
 				betas.push(0);
 			}
 		}
+		console.log("time:"+( (new Date()).getTime()-starttime ))
+		console.log("mean:"+mean(betas));
+		console.log("std_err:"+boot_std(betas,1000));
+		return betas;
+		// TODO : should we include std.dev.?
+	}
+
+	var normal_twosided_beta_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
+		if (!samples) samples = 10000;
+		var betas = [];
+		var starttime = (new Date()).getTime();
+		for (var i = 0;i < samples;i++) {
+			var res = simulateResult([0,var_val],[0,var_val],b0,b1);
+			if (res[0] == 'true') {
+				var S_x = res[1];
+				var S_y = res[2];
+				var time = res[5];
+				var weight = Math.exp((1/(var_val*2))*(indiff*S_y + indiff*S_x - time*indiff*indiff/2));
+				betas.push(weight);
+			} else {
+				betas.push(0);
+			}
+		}
+		console.log("time:"+( (new Date()).getTime()-starttime ))
+		console.log("mean:"+mean(betas));
+		console.log("std_err:"+boot_std(betas,1000));
+		return betas;
+		// TODO : should we include std.dev.?
+	}
+
+	var normal_twosided_beta_imp2 = function(b0, b1, indiff, var_val, simulateResult, samples) {
+		if (!samples) samples = 10000;
+		var betas = [];
+		var starttime = (new Date()).getTime();
+		for (var i = 0;i < samples;i++) {
+			var res = simulateResult([0,var_val],[0,var_val],b0,b1);
+			if (res[0] == 'true') {
+				var S_x = res[1];
+				var S_y = res[2];
+				var S_x2 = res[3];
+				var S_y2 = res[4];
+				var n = res[5];
+				
+				// get best estimate from H0
+				//var mle_h0_mu = (S_x + S_y)/(2*n)
+				var mle_h0_mu = 0;
+
+				// get best estimate from HA
+				var unc_mle_x = S_x/n;
+				var unc_mle_y = S_y/n;
+
+				/*if (Math.abs(unc_mle_x-unc_mle_y) > indiff) {
+					var mle_ha_mu_1 = unc_mle_x;
+					var mle_ha_mu_2 = unc_mle_y;
+				} else {
+					var pos = 0.5*(unc_mle_x + unc_mle_y + indiff); // mle of mu_1 when constrained so mu_1 = mu_2 + d
+					var neg = 0.5*(unc_mle_x + unc_mle_y - indiff); // mle of mu_1 when constrained so mu_1 = mu_2 - d
+					var pos_lik_part = S_x2 - 2*pos*S_x + n*pos*pos + S_y2 - 2*S_y*(pos-indiff) + n*(pos-indiff)*(pos-indiff);
+					var neg_lik_part = S_x2 - 2*neg*S_x + n*neg*neg + S_y2 - 2*S_y*(neg+indiff) + n*(neg+indiff)*(neg+indiff);
+					if (pos_lik_part < neg_lik_part) {
+						var mle_ha_mu_1 = pos;
+						var mle_ha_mu_2 = pos - indiff;
+					} else {
+						var mle_ha_mu_1 = neg;
+						var mle_ha_mu_2 = neg + indiff;
+					}
+				}*/
+				if (S_x > S_y) {
+					var mle_ha_mu_1 = indiff/2;
+					var mle_ha_mu_2 = -indiff/2;
+				} else {
+					var mle_ha_mu_1 = -indiff/2;
+					var mle_ha_mu_2 = indiff/2;
+				}
+
+				var weight = Math.exp((1/(var_val*2))*(-2*mle_h0_mu*(S_x + S_y) + 2*n*mle_h0_mu*mle_h0_mu + 2*mle_ha_mu_1*S_x + 2*mle_ha_mu_2*S_y - n*mle_ha_mu_1*mle_ha_mu_1 - n*mle_ha_mu_2*mle_ha_mu_2 ) );
+				betas.push(weight);
+			} else {
+				betas.push(0);
+			}
+		}
+		console.log("time:"+( (new Date()).getTime()-starttime ))
+		console.log("mean:"+mean(betas));
+		console.log("std_err:"+boot_std(betas,1000));
 		return betas;
 		// TODO : should we include std.dev.?
 	}
@@ -585,7 +736,7 @@
 		'two-sided' : {
 			'l_an' : normal_uv_twosided_LR_H0,
 			'l_bn' : normal_uv_twosided_LR_HA,
-			'alpha' : normal_twosided_alpha,
+			'alpha' : normal_twosided_alpha_imp2,
 			'beta' : normal_twosided_beta,
 			'simulateH0' : normal_twosided_simulateH0,
 		},
@@ -601,7 +752,7 @@
 		'two-sided' : {
 			'l_an' : normal_kv_twosided_LR_H0,
 			'l_bn' : normal_kv_twosided_LR_HA,
-			'alpha' : normal_twosided_alpha,
+			'alpha' : normal_twosided_alpha_imp2,
 			'beta' : normal_twosided_beta,
 			'simulateH0' : normal_twosided_simulateH0,
 		},
@@ -639,9 +790,18 @@
 		'two-sided' : {
 			0.05 : { // alpha
 				0.10 : { // beta
+					0.2 : { // indifference
+						1 : [101.8, 8.0] // check result
+					},
 					0.1 : { // indifference
-						1 : [140, 16.9], // variance, TODO : get more approximate results
-					}
+						1 : [133.5, 8.3]
+					},
+					0.05 : { // indifference
+						1 : [167.4, 8.5] // check result
+					},
+					/*0.025 : { // indifference
+						1 : [200, 8.9] // check result
+					}*/
 				}
 			}
 		},
