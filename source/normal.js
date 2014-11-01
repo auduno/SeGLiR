@@ -331,7 +331,7 @@
 			console.log("calculating thresholds via simulation")
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [50,10], 0.001, 46000, 400000, 6, 1)
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [98,14.5], 0.001, 46000, 1500000, 6, 1)
-			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [200,8.9], 0.001, 46000, 1500000, 6, 1)
+			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [200,9], 0.001, 46000, 1500000, 6, 1)
 			b0 = thr[0];
 			b1 = thr[1];
 		}
@@ -532,6 +532,68 @@
 			} else {
 				betas.push(0);
 			}
+		}
+		console.log("time:"+( (new Date()).getTime()-starttime ))
+		console.log("mean:"+mean(betas));
+		console.log("std_err:"+boot_std(betas,1000));
+		return betas;
+		// TODO : should we include std.dev.?
+	}
+
+	var normal_twosided_beta_imp3 = function(b0, b1, indiff, var_val, simulateResult, samples) {
+		if (!samples) samples = 10000;
+		var betas = [];
+		var starttime = (new Date()).getTime();
+		for (var i = 0;i < samples;i++) {
+			var finished = false;
+			var S_x = 0;
+			var n = 0;
+			var result = undefined;
+			while (!finished) {
+				n += 1;
+				// pull xs from N(0,2*var_val)
+				S_x += jStat.jStat.normal.sample(0,Math.sqrt(2*var_val));
+				// test on simplified boundaries
+				var L_na = Math.exp( S_x*S_x/(4*n*var_val) );
+				if (L_na >= b0) {
+					finished = true;
+					result = "false"
+				}
+				if (Math.abs(S_x/n) < indiff) {
+					if (S_x/n > 0) {
+						var L_nb = Math.exp( n*(S_x/n - indiff)*(S_x/n - indiff)/(4*var_val) );
+					} else {
+						var L_nb = Math.exp( n*(S_x/n + indiff)*(S_x/n + indiff)/(4*var_val) );
+					}
+					//var L_nb = Math.exp( (S_x + n*indiff)*(S_x + n*indiff)/(4*n*var_val) );
+					if (L_nb >= b1) {
+						finished = true;
+						result = "true";
+					}
+				}
+			}
+
+			if (result == 'true') {
+				
+				/*if (Math.abs(S_x/n) > indiff) {
+					var weight = Math.exp(S_x*S_x/(4*n*var_val));
+				} else if (S_x > 0) {
+					var weight = Math.exp( (2*indiff*S_x - n*indiff*indiff)/(4*var_val) );	
+				} else {
+					var weight = Math.exp( (-2*indiff*S_x - n*indiff*indiff)/(4*var_val) );
+				}*/
+				//var weight = Math.exp( (-2*indiff*S_x - n*indiff*indiff)/(4*var_val) );
+
+				var weight = Math.exp( (2*indiff*S_x - n*indiff*indiff)/(4*var_val) );
+				betas.push(weight);
+			} else {
+				betas.push(0);
+			}
+			/*if (result == "false") {
+				betas.push(1);
+			} else {
+				betas.push(0);
+			}*/
 		}
 		console.log("time:"+( (new Date()).getTime()-starttime ))
 		console.log("mean:"+mean(betas));
@@ -800,7 +862,7 @@
 						1 : [167.4, 8.5] // check result
 					},
 					/*0.025 : { // indifference
-						1 : [200, 8.9] // check result
+						1 : [200, 9] // check result
 					}*/
 				}
 			}
