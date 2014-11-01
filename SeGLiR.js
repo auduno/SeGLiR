@@ -1904,7 +1904,7 @@ var glr = function() {
 		// TODO : should we include std.dev.?
 	}
 
-	/*var normal_twosided_alpha_imp2 = function(b0, b1, indiff, var_val, simulateResult, samples) {
+	var normal_twosided_alpha_imp2 = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
 		var alphas = [];
 		var beta = 1; // precision/inverse-variance of the importance sampling distribution
@@ -1931,9 +1931,9 @@ var glr = function() {
 		console.log("std_err:"+boot_std(alphas,1000));
 		return alphas;
 		// TODO : should we include std.dev.?
-	}*/
+	}
 
-	var normal_twosided_alpha_imp2 = function(b0, b1, indiff, var_val, simulateResult, samples) {
+	var normal_twosided_alpha_imp2b = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
 		var alphas = [];
 		var beta = 1; // precision/inverse-variance of the importance sampling distribution
@@ -2135,20 +2135,18 @@ var glr = function() {
 	}
 
 	var normal_uv_twosided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff) {
-		if (n == 1) {
-			return 1;
-		}
-		// TODO : there must be a warning here if the estimate of variance is equal to 0. This is infinitely unlikely, and creates an error.
 		var mle_mean = (S_x + S_y)/(2*n);
-		var likRatio = Math.exp(n * ( Math.log( S_x2 + S_y2 - 2*n*mle_mean*mle_mean ) - Math.log( S_x2 - n*(S_x/n)*(S_x/n) + S_y2 - n*(S_y/n)*(S_y/n) ) ));
+		var part1 = S_x2 + S_y2 - 2*n*mle_mean*mle_mean
+		if (part1 == 0) {
+			var likRatio = 0;
+		} else {
+			var likRatio = Math.exp(n * ( Math.log( part1 ) - Math.log( S_x2 - n*(S_x/n)*(S_x/n) + S_y2 - n*(S_y/n)*(S_y/n) ) ));
+		}
 
 		return likRatio;
 	}
 
 	var normal_uv_twosided_LR_HA = function(S_x, S_y, S_x2, S_y2, n, indiff) {
-		if (n == 1) {
-			return 1;
-		}
 		var unc_mle_x = S_x/n;
 		var unc_mle_y = S_y/n;
 
@@ -2209,9 +2207,6 @@ var glr = function() {
 
 	var normal_uv_onesided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff) {
 		// H0 is that mu_1 < mu_2 -> mu_1 - mu_2 < -indiff -> mu_1 = mu_2 - indiff
-		if (n == 1) {
-			return 1;
-		}
 		var unc_mle_x = S_x/n;
 		var unc_mle_y = S_y/n;
 
@@ -2227,9 +2222,6 @@ var glr = function() {
 	}
 
 	var normal_uv_onesided_LR_HA = function(S_x, S_y, S_x2, S_y2, n, indiff) {
-		if (n == 1) {
-			return 1;
-		}
 		var unc_mle_x = S_x/n;
 		var unc_mle_y = S_y/n;
 
@@ -2253,9 +2245,6 @@ var glr = function() {
 	}
 
 	var normal_kv_twosided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff, var_value) {
-		if (n == 1) {
-			return 1;
-		}
 		var mle_mean = (S_x + S_y)/(2*n);
 		var mle_x = S_x/n;
 		var mle_y = S_y/n;
@@ -2267,9 +2256,6 @@ var glr = function() {
 	}
 
 	var normal_kv_twosided_LR_HA = function(S_x, S_y, S_x2, S_y2, n, indiff, var_value) {
-		if (n == 1) {
-			return 1;
-		}
 		var unc_mle_x = S_x/n;
 		var unc_mle_y = S_y/n;
 
@@ -2297,9 +2283,6 @@ var glr = function() {
 
 	var normal_kv_onesided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff, var_value) {
 		// H0 is that mu_1 < mu_2 -indiff -> mu_1 = mu_2 - indiff
-		if (n == 1) {
-			return 1;
-		}
 		var unc_mle_x = S_x/n;
 		var unc_mle_y = S_y/n;
 
@@ -2315,9 +2298,6 @@ var glr = function() {
 	}
 
 	var normal_kv_onesided_LR_HA = function(S_x, S_y, S_x2, S_y2, n, indiff, var_value) {
-		if (n == 1) {
-			return 1;
-		}
 		var unc_mle_x = S_x/n;
 		var unc_mle_y = S_y/n;
 
