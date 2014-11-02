@@ -230,7 +230,6 @@
 			var S_y = 0;
 			var S_x2 = 0;
 			var S_y2 = 0;
-			var S_xy = 0;
 			while (!finished) {
 				sample1 = generate(params_1);
 				sample2 = generate(params_2);
@@ -238,10 +237,9 @@
 				S_y += sample2;
 				S_x2 += sample1*sample1;
 				S_y2 += sample2*sample2;
-				S_xy += sample1*sample2;
 				time += 1;
 				// test it
-				var result = checkTest(S_x, S_y, S_x2, S_y2, time, indiff, b0, b1, S_xy);
+				var result = checkTest(S_x, S_y, S_x2, S_y2, time, indiff, b0, b1);
 				if (result) finished = true;
 			}
 			// return result, S_x, S_y, stoppingTime
@@ -249,15 +247,15 @@
 		}
 		this.simulateResult = simulateResult;
 
-		var checkTest = function(S_x, S_y, S_x2, S_y2, n, d, b0, b1, S_xy) {
+		var checkTest = function(S_x, S_y, S_x2, S_y2, n, d, b0, b1) {
 			// check if test should be stopped
 			
 			// TODO : should I check for when both L_an and L_bn pass thresholds?
-			var L_an = LikH0(S_x, S_y, S_x2, S_y2, n, d, var_value, S_xy);
+			var L_an = LikH0(S_x, S_y, S_x2, S_y2, n, d, var_value);
 			if (L_an >= b0) {
 				return ['false',L_an];
 			}
-			var L_bn = LikHA(S_x, S_y, S_x2, S_y2, n, d, var_value, S_xy);
+			var L_bn = LikHA(S_x, S_y, S_x2, S_y2, n, d, var_value);
 			if (L_bn >= b1) {
 				return ['true',L_an]
 			}
@@ -554,7 +552,7 @@
 		return betas;
 	}
 
-	var normal_uv_twosided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff, blah, S_xy) {
+	var normal_uv_twosided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff) {
 		if (n == 1) {
 			// TODO : when n = 1, mle_llik is always -Infinity, so we have to enforce n > 1
 			return 1;
@@ -567,16 +565,10 @@
 			var likRatio = Math.exp(n * ( Math.log( part1 ) - Math.log( S_x2 - n*(S_x/n)*(S_x/n) + S_y2 - n*(S_y/n)*(S_y/n) ) ));
 		}
 
-		console.log("regular LR:"+likRatio);
-		//var newlr = Math.exp( -n/2 *Math.log( 1 - (S_x*S_x - 2*S_x*S_y + S_y*S_y)/(n*(S_x2 - 2*S_xy + S_y2)) ));
-		var part = n*(S_x2 - 2*S_xy + S_y2);
-		var newlr = Math.exp( n/2 *Math.log( (part)/(part - S_x*S_x + 2*S_x*S_y - S_y*S_y ) ));
-		console.log("simple LR:"+newlr);
-
 		return likRatio;
 	}
 
-	var normal_uv_twosided_LR_HA = function(S_x, S_y, S_x2, S_y2, n, indiff, blah, S_xy) {
+	var normal_uv_twosided_LR_HA = function(S_x, S_y, S_x2, S_y2, n, indiff) {
 		if (n == 1) {
 			// TODO : when n = 1, mle_llik is always -Infinity, so we have to enforce n > 1
 			return 1;
@@ -599,16 +591,8 @@
 
 		
 		if (pos_lik_part < neg_lik_part) {
-			//console.log("regular LR:"+Math.exp( n*(Math.log(pos_lik_part) - mle_lik_part) ));
-			//var part = n*(S_x2 - 2*S_xy + S_y2);
-			//var newlr = Math.exp( -n/2 *Math.log( (part - S_x*S_x + 2*S_x*S_y - S_y*S_y) / ( part - 2*n*indiff*(S_x-S_y) + n*n*indiff*indiff ) ));
-			//console.log("simple LR:"+newlr);
 			return Math.exp( n*(Math.log(pos_lik_part) - mle_lik_part) );
 		} else {
-			//console.log("regular LR:"+Math.exp( n*(Math.log(pos_lik_part) - mle_lik_part) ));
-			//var part = n*(S_x2 - 2*S_xy + S_y2);
-			//var newlr = Math.exp( -n/2 *Math.log( (part - S_x*S_x + 2*S_x*S_y - S_y*S_y) / ( part + 2*n*indiff*(S_x-S_y) + n*n*indiff*indiff ) ));
-			//console.log("simple LR:"+newlr);
 			return Math.exp( n*(Math.log(neg_lik_part) - mle_lik_part) );
 		}
 	}
