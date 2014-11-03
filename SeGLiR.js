@@ -11,7 +11,7 @@ var glr = function() {
 
 	this.test = function(type) {
 		if (type in tests) {
-			return new tests[type](arguments[1], arguments[2], arguments[3], arguments[4], arguments[5], arguments[6]);
+			return new tests[type](arguments[1], arguments[2], arguments[3], arguments[4], arguments[5], arguments[6], arguments[7]);
 		} else {
 			console.log("No test of type '"+type+"'.");
 		}
@@ -1494,7 +1494,7 @@ var glr = function() {
 	
 	/*** test for comparing normal means, unknown or known variance ***/
 
-	var normal_test = function(sides, indifference, type1_error, type2_error, variance, variance_bound) {
+	var normal_test = function(sides, indifference, type1_error, type2_error, variance, variance_bound, t0) {
 
 		var b0, b1, stoppingTime, var_bound, var_value;
 
@@ -1536,6 +1536,11 @@ var glr = function() {
 			var_bound = variance_bound;
 		} else {
 			var_value = variance;
+		}
+		if (typeof(t0) == "undefined") {
+			var t_0 = 0;
+		} else {
+			var t_0 = t0;
 		}
 		// sufficient stats for test is sum(x_i), sum(y_i), sum(x_i^2) and sum(y_i^2)
 		var S_x = 0;
@@ -1742,7 +1747,9 @@ var glr = function() {
 
 		var checkTest = function(S_x, S_y, S_x2, S_y2, n, d, b0, b1) {
 			// check if test should be stopped
-			
+			if (n < t_0) {
+				return undefined;
+			}
 			// TODO : should I check for when both L_an and L_bn pass thresholds?
 			var L_an = LikH0(S_x, S_y, S_x2, S_y2, n, d, var_value);
 			if (L_an >= b0) {
@@ -1869,7 +1876,7 @@ var glr = function() {
 		return alphas;
 	}
 
-	var normal_twosided_alpha_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
+	var normal_twosided_alpha_imp = function(b0, b1, indiff, var_val, simulateResult, samples, t_0) {
 		if (!samples) samples = 10000;
 		var alphas = [];
 		var beta = 1; // precision/inverse-variance of the importance sampling distribution
@@ -1885,6 +1892,10 @@ var glr = function() {
 				n += 1;
 				// pull xs from N(0,2*var_val)
 				S_x += jStat.jStat.normal.sample(z,Math.sqrt(2*var_val));
+
+				if (n < t_0) {
+					continue;
+				}
 				// test on simplified boundaries
 				var L_na = Math.exp( S_x*S_x/(4*n*var_val) );
 				if (L_na >= b0) {
@@ -1999,7 +2010,7 @@ var glr = function() {
 		return betas;
 	}
 
-	var normal_twosided_beta_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
+	var normal_twosided_beta_imp = function(b0, b1, indiff, var_val, simulateResult, samples, t_0) {
 		if (!samples) samples = 10000;
 		var betas = [];
 		//var starttime = (new Date()).getTime();
@@ -2012,6 +2023,11 @@ var glr = function() {
 				n += 1;
 				// pull xs from N(0,2*var_val)
 				S_x += jStat.jStat.normal.sample(0,Math.sqrt(2*var_val));
+
+				if (n < t_0) {
+					continue;
+				}
+				
 				// test on simplified boundaries
 				var L_na = Math.exp( S_x*S_x/(4*n*var_val) );
 				if (L_na >= b0) {
@@ -2330,6 +2346,7 @@ var glr = function() {
 	}
 
 	tests['normal'] = normal_test;
+
 	
 	/*** test for comparing normal means with equal known variance, best-arm selection with δ-PAC guarantees ***/
 
