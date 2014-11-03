@@ -811,14 +811,17 @@
 						1 : [106, 8.0] // variance
 					},
 					0.1 : { // indifference
-						1 : [137.5, 8.3] // variance
+						1 : [137.4, 8.3] // variance
 					},
 					0.05 : { // indifference
 						1 : [170.5, 8.55] // variance
 					},
-					/*0.025 : { // indifference
-						1 : [200, 9] // check result
-					}*/
+					0.025 : { // indifference
+						1 : [205, 8.65] // variance
+					},
+					0.01 : {
+						1 : [252.5, 8.6] // variance
+					}
 				}
 			}
 		},
