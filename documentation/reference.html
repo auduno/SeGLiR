@@ -38,7 +38,9 @@
 
 <!--<h2 id="process">Flow</h2>-->
 
-<p>SeGLiR is a javascript implementation of hypothesis testing (aka A/B-testing) with Sequential Generalized Likelihood Ratio Tests. The Sequential Generalized Likelihood Ratio Test is a family of sequential hypothesis test that will stop as soon as we are able to reject a hypothesis, while still keeping type-1 and type-2 error guarantees. Compared to fixed-sample size tests, this usually gives a significant decrease in the needed samplesize, at the cost of some loss of precision in estimates when the test is done. The test has been shown<sup><a href="#fn1">1</a></sup> to be <em>uniformly first-order asymptotically optimal</em> with regard to minimizing samplesize for tests based on a exponential family parameter. For some idea about the difference in expected samplesize, here's numbers from a comparison of bernoulli proportions with a fixed sample-size test and a sequential GLR test, both with $\alpha$-level 0.05, $\beta$-level 0.10 and $\delta$ = 0.01.</p>
+<p>SeGLiR is a javascript implementation of hypothesis testing (aka A/B-testing) with Sequential Generalized Likelihood Ratio Tests. Sequential Generalized Likelihood Ratio Tests (or Sequential GLR tests for short) are a family of <a href="http://en.wikipedia.org/wiki/Sequential_analysis">sequential hypothesis tests</a> that will stop as soon as we are able to reject a hypothesis, while still keeping type-1 and type-2 error guarantees. Compared to fixed-sample size tests, this may give a significant decrease in the needed samplesize, at the cost of a larger <em>worst-case</em> samplesize as well as some loss of precision in estimates when the test is done. The test has been shown<sup><a href="#fn1">1</a></sup> to be <em>uniformly first-order asymptotically optimal</em> with regard to minimizing samplesize for tests based on a <a href="http://en.wikipedia.org/wiki/Exponential_family">exponential family</a> parameter. To get some idea about the performance of the test, here's the expected samplesize depending on the true differences between the true parameters in a two-sided comparison of proportions, for a fixed-samplesize and a sequential glr test. Both tests had alpha-level....
+
+For some idea about the difference in expected samplesize, here's numbers from a comparison of bernoulli proportions with a fixed sample-size test and a sequential GLR test, both with $\alpha$-level 0.05, $\beta$-level 0.10 and $\delta$ = 0.01.</p>
 
 <p style="text-align:center">
   <a href="../images/samplesize1.png" rel="lightbox" title="Expected Samplesize"><img src="../images/samplesize1.png" width="400px" height="305px">
@@ -279,11 +281,11 @@ L_{na} \geq b_0 \;\mathrm{or}\; L_{nb} \geq b_1
 </mrow>
 </math>
 
-<p>and $b_0$ and $b_1$ are thresholds precalculated so that the test fulfills the wanted type-1 and type-2 error guarantees. If $L_{na} > b_0$ at the time of stopping, the null hypothesis is rejected (and the alternative hypothesis accepted), while if $L_{nb} > b_1$ the alternative hypothesis is rejected (and the null hypothesis accepted). Typically there is also a small predefined indifference region of size $\delta$ between $\Theta_0$ and $\Theta_A$ where we don't care about our type-1 and type-2 error guarantees. This is equivalent to saying that we are only interested in detecting differences larger than $\delta$. Note that there is a tradeoff between $\delta$ and worst-case samplesize - when $\delta$ is small, worst-case samplesize may be large, while if $\delta$ is large, worst-case samplesize may be small.</p>
+<p>and $b_0$ and $b_1$ are thresholds precalculated so that the test fulfills the wanted type-1 and type-2 error guarantees. If $L_{na} > b_0$ at the time of stopping, the null hypothesis is rejected (and the alternative hypothesis accepted), while if $L_{nb} > b_1$ the alternative hypothesis is rejected (and the null hypothesis accepted). Typically there is also a small predefined indifference region of size $\delta$ between $\Theta_0$ and $\Theta_A$ where we don't care about our type-1 and type-2 error guarantees. This is equivalent to saying that we are only interested in detecting differences larger than $\delta$. Note that there is a tradeoff between $\delta$ and worst-case samplesize - reducing $\delta$ will increase the worst-case samplesize, while increasing $\delta$ reduces the worst-case samplesize.</p>
 
-<p>Unlike fixed sample-size tests, the thresholds $b_0$ and $b_1$ for a given $\alpha$-level and $\beta$-level are not analytically calculable, therefore simulation has to be used to calculate these thresholds. Since this can be a time-demanding affair, especially when $\delta$ is small, this library includes some precalculated thresholds for the most common $\alpha$- and $\beta$-levels. See below for exactly which.</p>
+<p>Unlike fixed sample-size tests, the thresholds $b_0$ and $b_1$ for a given $\alpha$-level and $\beta$-level are not analytically calculable, therefore simulation has to be used to calculate these thresholds. Since this can be a time-demanding affair, this library includes some precalculated thresholds for the most common combinations of $\delta$, $\alpha$- and $\beta$-levels. See below for details.</p>
 
-<p>Note that like all sequential tests with a stopping rule, the usual maximum likelihood estimates of the parameter $\theta$ will be biased. Therefore, this library implements the Whitehead method to bias-correct estimates, which can be called with <em>estimate()</em> when the test is done. Confidence intervals are calculated with bias-adjusted bootstrapping, but note that coverage may be poor for some parts of the parameter space.</p>
+<p>Note that like all sequential tests with a stopping rule, the post-analysis maximum likelihood estimates of the parameter $\theta$ will be biased. Therefore, this library implements the Whitehead method to bias-correct estimates, which can be called with <em>estimate()</em> when the test is done. Confidence intervals are calculated with bias-adjusted bootstrapping, but note that coverage may be poor for some parts of the parameter space, see details below.</p>
 
 <h2>Installation and usage</h2>
 
@@ -302,9 +304,9 @@ L_{na} \geq b_0 \;\mathrm{or}\; L_{nb} \geq b_1
 <pre><code>var test = glr.test(<em>type</em>, <em>sides</em>, <em>indifference_size</em>, <em>alpha</em>, <em>beta</em>);
 </code></pre>
 
-<p>where <em>type</em> is the type of the test (for instance "bernoulli"), <em>sides</em> is "two-sided" or "one-sided", <em>indifference_size</em> is the size of the indifference region, <em>alpha</em> is the desired type-1 error, and <em>beta</em> is the desired type-2 error. These parameters may vary depending on the type of test, so check documentation for the test type below. Note that in a lot of cases, calculating the thresholds b_0 and b_1 in order to get the wanted type-1 and type-2 error may take a long time, so it's an advantage to select alpha and beta values where the thresholds are precalculated, see this under the specific test.</p>
+<p>where <em>type</em> is the type of the test (for instance "bernoulli"), <em>sides</em> is "two-sided" or "one-sided", <em>indifference_size</em> is the size of the indifference region, <em>alpha</em> is the desired type-1 error, and <em>beta</em> is the desired type-2 error. These parameters may vary depending on the type of test, so check documentation for the test type below. Note that in a lot of cases, calculating the thresholds $b_0$ and $b_1$ in order to get the wanted $\alpha$- and $\beta$-level may take a long time, so it's an advantage to select alpha and beta values where the thresholds are precalculated, see this under the specific test. If the precalculated thresholds are not available for the wanted combination of $\delta$, $\alpha$- and $\beta$-level, SeGLiR will calculate these thresholds by simulation when instantiating the test.</p>
 
-<p>From the returned instance of the test, you can add datasamples via the function <em>addData()</em>:
+<p>From the returned instance of the test, you can add samples via the function <em>addData()</em>:
 
 <pre><code>test.addData({x : 0});
 test.addData({x : 1, y : 0});
@@ -326,9 +328,9 @@ If this function returns the strings "true" or "false", the test has finished. "
 
 <h2>Comparison of two bernoulli proportions</h2>
 
-<p>In these tests we assume that we have two random variables, $X$ and $Y$, where $X$ is bernoulli distributed with unknown parameter $p_1$ and $Y$ is bernoulli distributed with unknown parameter $p_2$, and we want to do some inference on the parameters $p_1$ and $p_2$. These tests are what is commonly used in web page testing, for instance for testing conversion.</p>
+<p>In these tests we assume that we have two random variables, $X$ and $Y$, where $X$ is bernoulli distributed with unknown parameter $p_1$ and $Y$ is bernoulli distributed with unknown parameter $p_2$, and we want to detect whether there is a difference between $p_1$ and $p_2$. These tests are what is commonly used in web page testing, for instance for comparing conversion rates.</p>
 
-<p>In the two-sided test we test the hypotheses $H_0 : p_1 = p_2$ versus $H_A : |p_1 - p_2| > \delta$ (where $\delta > 0$ is the size of the indifference region), while in the one-sided test we test the hypotheses $H_0 : p_1 < p_2 - \delta$ versus $H_A : p_1 > p_2 + \delta$. Note that in both cases, this is equivalent to saying we are interested in detecting differences between $p_1$ and $p_2$ larger than $\delta > 0$.</p>
+<p>In the two-sided test we test the hypotheses $H_0 : p_1 = p_2$ versus $H_A : |p_1 - p_2| > \delta$ (where $\delta > 0$ is the size of the indifference region), while in the one-sided test we test the hypotheses $H_0 : p_1 - p_2 < - \delta$ versus $H_A : p_1 - p_2 > \delta$. Note that in both cases, this is equivalent to saying we are interested in detecting differences between $p_1$ and $p_2$ larger than $\delta$.</p>
 
 <p>Test instantiation:</p>
 
@@ -346,11 +348,11 @@ If this function returns the strings "true" or "false", the test has finished. "
 
 <ul>
 <li><em><strong>getResults()</strong></em> : returns an object with sufficient statistics, likelihood ratio statistics, as well as information on whether the test is done.</li>
-<li><em><strong>pValue()</strong></em> : if the test is done, this returns a simulated p-value.</li>
+<li><em><strong>pValue()</strong></em> : if the test is done, this will simulate the p-value.</li>
 <li><em><strong>confInterval()</strong></em> : if the test is done, this returns a bootstrap confidence interval of the difference between $p_1$ and $p_2$.</li>
 <li><em><strong>estimate()</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $p_1$, $p_2$ and $p_1 - p_2$ respectively.</li>
 <li><em><strong>getData()</strong></em> : returns two arrays with the sequences of samples of $X$ and $Y$ collected so far.</li>
-<li><em><strong>addData(</strong>{x : 1, y : 1}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"true"</em> ($H_A$ was rejected) or <em>"false"</em> ($H_0$ was rejected) as a string. Note that after the test is finished, the instance will still store new data points added internally, but test statistics and conclusion will not be updated. All stored data points collected can be retrieved via <em>getData()</em>.</li>
+<li><em><strong>addData(</strong>{x : 1, y : 1}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"true"</em> ($H_A$ was rejected) or <em>"false"</em> ($H_0$ was rejected) as a string. Note that after the test is finished, the instance will still store new samples added, but test statistics and conclusion will not be updated. All stored samples collected can be retrieved via <em>getData()</em>.</li>
 <li><em><strong>expectedSamplesize(</strong>p1, p2<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true parameters $p_1$ and $p_2$.</li>
 <li><em><strong>maxSamplesize()</strong></em> : returns the worst-case maximum samplesize of this test.</li>
 <li><em><strong>properties()</strong></em> : returns an object with properties of this test that were specified on initialization, such as <em>type</em>, <em>sides</em>, <em>indifference size</em>, <em>alpha</em> and <em>beta</em>.</li>
@@ -376,13 +378,70 @@ test.addData({y : 1, x : 0}); // returns result "false", i.e. we reject the null
 test.estimate(); // returns [0, 1, -1]
 </code></pre>
 
+<h2>Comparison of two normal means</h2>
+
+<p>In these tests we assume that we have two normal random variables, $X$ and $Y$, with $X \sim N(\mu_1,\sigma^2)$ and $Y \sim N(\mu_2,\sigma^2)$, where $\mu_1$ and $\mu_2$ is unknown, $\sigma^2$ may be known or unknown, and we want to detect differences between $\mu_1$ and $\mu_2$.</p>
+
+<p>In the two-sided test we test the hypotheses $H_0 : \mu_1 = \mu_2$ versus $H_A : |\mu_1 - \mu_2| > \delta$ (where $\delta > 0$ is the size of the indifference region), while in the one-sided test we test the hypotheses $H_0 : \mu_1 - \mu_2 < - \delta$ versus $H_A : \mu_1 - \mu_2 > \delta$. Note that in both cases, this is equivalent to saying we are interested in detecting differences between $\mu_1$ and $\mu_2$ larger than $\delta$.</p>
+
+<p>Note that in the case that the variance $\sigma^2$ is unknown, we need to specify some upper bound on the variance in order to be able to give type-1 and type-2 error guarantees. It is therefore needed to at least have some ballpark estimate of the variance before using this test.</p>
+
+<p>Test instantiation:</p>
+
+<ul>
+<li><em>seglir.</em><strong>test(</strong>"normal", <em>sides</em>, <em>indifference</em>, <em>alpha</em>, <em>beta</em>, <em>variance</em>, <em>variance_bound</em><strong>)</strong><ul>
+    <li><em>sides</em> : "one-sided" or "two-sided"</li>
+    <li><em>indifference</em> : the value of $\delta$, i.e. the size of the indifference region</li>
+    <li><em>alpha</em> : the wanted level of type-1 errors</li>
+    <li><em>beta</em> : the wanted level of type-2 errors</li>
+    <li><em>variance</em> : the variance of X and Y, if it is known, <em>undefined</em> otherwise.</li>
+    <li><em>variance_bound</em> : if <em>variance</em> is undefined, i.e. the variance is unknown, some upper bound on the variance must be specified.</li>
+  </ul>
+</li>
+</ul>
+
+<p>Instance functions</p>
+
+<ul>
+<li><em><strong>getResults()</strong></em> : returns an object with sufficient statistics, likelihood ratio statistics, as well as information on whether the test is done.</li>
+<li><em><strong>pValue()</strong></em> : if the test is done, this simulates the p-value.</li>
+<li><em><strong>confInterval()</strong></em> : if the test is done, this returns a bootstrap confidence interval of the difference between $\mu_1$ and $\mu_2$.</li>
+<li><em><strong>estimate()</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $\mu_1$, $\mu_2$ and $\mu_1 - \mu_2$ respectively.</li>
+<li><em><strong>getData()</strong></em> : returns two arrays with the sequences of samples of $X$ and $Y$ collected so far.</li>
+<li><em><strong>addData(</strong>{x : 9.2, y : 8.5}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"true"</em> ($H_A$ was rejected) or <em>"false"</em> ($H_0$ was rejected) as a string. Note that after the test is finished, the instance will still store new data points added internally, but test statistics and conclusion will not be updated. All stored data points collected can be retrieved via <em>getData()</em>.</li>
+<li><em><strong>expectedSamplesize(</strong>mu1, mu2<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true parameters $\mu_1$ and $\mu_2$.</li>
+<li><em><strong>properties()</strong></em> : returns an object with properties of this test that were specified on initialization, i.e. <em>type</em>, <em>sides</em>, <em>indifference size</em>, <em>alpha</em>, <em>beta</em>, <em>variance</em> and <em>variance_bound</em>.</li>
+</ul>
+
+<p>Precalculated thresholds:</p>
+
+<ul>
+  <li>Two-sided:</li>
+</ul>
+
+<p>A simple example:</p>
+
+<pre><code>var glr = require('seglir');
+var test = glr.test("normal","two-sided",0.01,0.05,0.10,1);
+// add data from samples as they come in
+test.addData({x : 0});
+test.addData({y : 1});
+test.addData({y : 1, x : 0});
+test.addData({x : 0, y : 1});
+test.addData({y : 1, x : 0}); // returns result "false", i.e. we reject the null-hypothesis
+// get estimates of mu_1, mu_2 and mu_1-mu_2
+test.estimate(); // returns [0, 1, -1]
+</code></pre>
+
 <h2>Best arm selection with δ-PAC guarantees</h2>
 
-<p>This is a slightly different type of test than those above. We assume we have two arms, a la a multi-armed bandit setting, and want to find out which arm is the best with regard to some parameter. We also want to have some guarantee on how likely we are to make a wrong choice, called δ-PAC guarantee, so that $P(correct choice) = 1 - \delta$. In the setting where we are only interested in pure exploration (as opposed to exploration-exploitation), seq. GLR tests have been shown<sup><a href="#fn2">2</a></sup> to be optimal with regard to samplesize. For more on these tests, see <a href="http://www.di.ens.fr/~kaufmann/TheseEmilie.pdf">[E.Kaufmann]</a>.</p>
+<p>These are a slightly different type of tests than those above. We assume we have two "arms", a la a multi-armed bandit problem, and want to find out which "arm" is the best with regard to some parameter. We also want to have some guarantee on how likely we are to actually select the best arm, called a δ-PAC guarantee, so that the probability of the correct choice is at least $1 - \delta$. This can be viewed as a multi-armed bandit problem with a "pure-exploration" (as opposed to "exploration-exploitation") strategy. Sequential GLR tests have been shown<sup><a href="#fn2">2</a></sup> to be optimal with regard to samplesize for these type of problems. For more details, see <a href="http://www.di.ens.fr/~kaufmann/TheseEmilie.pdf">Emilie Kaufmann's PhD thesis</a>.</p>
+
+<p>Note that these tests are similar to a regular two-sided Sequential GLR test with $\delta = 0$. Since there is no indifference region (i.e. we are interested in detecting a difference, no matter how small) there is no worst-case samplesize for these tests, which may lead to the test taking a very long time if the "arms" are close to equally as good.</p>
 
 <h2>Best arm selection with bernoulli arms</h2>
 
-<p>In these tests we assume that we have two random variables, $X$ and $Y$, where $X$ is bernoulli distributed with unknown parameter $p_1$ and $Y$ is bernoulli distributed with unknown parameter $p_2$, and we want to find which variable has highest $p$. This is equivalent to a two-sided bernoulli test with $\delta = 0$, except $b_0$ is variable instead of fixed. Since $\delta = 0$, note that this test has no worst-case samplesize, and may need a very large amount of samples if $p_1$ and $p_2$ are close to equal.</p>
+<p>In these tests we assume that we have two random variables, $X$ and $Y$, where $X$ is bernoulli distributed with unknown parameter $p_1$ and $Y$ is bernoulli distributed with unknown parameter $p_2$, and we want to find which variable has the highest value of $\p_.$.</p>
 
 <p>Test instantiation:</p>
 
@@ -400,9 +459,9 @@ test.estimate(); // returns [0, 1, -1]
 <li><em><strong>confInterval()</strong></em> : if the test is done, this returns a bootstrap confidence interval of the difference between $p_1$ and $p_2$.</li>
 <li><em><strong>estimate()</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $p_1$, $p_2$ and $p_1 - p_2$ respectively.</li>
 <li><em><strong>getData()</strong></em> : returns two arrays with the sequences of samples of $X$ and $Y$ collected so far.</li>
-<li><em><strong>addData(</strong>{x : 1, y : 1}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"X"</em> (i.e. $p_1 > p_2$) or <em>"Y"</em> ($p_2 > p_1$) as a string. Note that after the test is finished, the instance will still store new data points added internally, but test statistics and conclusion will not be updated. All stored data points collected can be retrieved via <em>getData()</em>.</li>
+<li><em><strong>addData(</strong>{x : 1, y : 1}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"X"</em> (i.e. $p_1 > p_2$) or <em>"Y"</em> ($p_2 > p_1$) as a string. Note that after the test is finished, the instance will still store new sampels added, but test statistics and conclusion will not be updated. All stored samples collected can be retrieved via <em>getData()</em>.</li>
 <li><em><strong>expectedSamplesize(</strong>p1, p2<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true parameters $p_1$ and $p_2$.</li>
-<li><em><strong>properties()</strong></em> : returns an object with properties of this test that were specified on initialization, such as <em>type</em>, <em>sides</em>, <em>indifference size</em>, <em>alpha</em> and <em>beta</em>.</li>
+<li><em><strong>properties()</strong></em> : returns an object with properties of this test that were specified on initialization, i.e. <em>delta</em>.</li>
 </ul>
 
 <p>A simple example:</p>
@@ -415,6 +474,44 @@ test.addData({y : 1});
 test.addData({y : 1, x : 0});
 test.addData({x : 0, y : 1}); // returns result "Y", i.e. p_1 > p_2
 // get estimates of p_1, p_2 and p_1-p_2
+test.estimate(); // returns [0, 1, -1]
+</code></pre>
+
+<h2>Best arm selection with normal arms</h2>
+
+<p>In these tests we assume that we have two random variables, $X \sim N(\mu_1,\sigma^2)$ and $Y \sim N(\mu_2,\sigma^2)$, where $\mu_1$, $\mu_2$ is unknown, $\sigma^2$ is known, and we want to detect which variable has the highest mean $\mu$.</p>
+
+<p>Test instantiation:</p>
+
+<ul>
+<li><em>seglir.</em><strong>test(</strong>"normal_pac", <em>delta</em>)</strong><ul>
+    <li><em>delta</em> : the wanted error guarantee</li>
+  </ul>
+</li>
+</ul>
+
+<p>Instance functions</p>
+
+<ul>
+<li><em><strong>getResults()</strong></em> : returns an object with sufficient statistics, likelihood ratio statistics, as well as information on whether the test is done.</li>
+<li><em><strong>confInterval()</strong></em> : if the test is done, this returns a bootstrap confidence interval of the difference between $\mu_1$ and $\mu_2$.</li>
+<li><em><strong>estimate()</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $\mu_1$, $\mu_2$ and $\mu_1 - \mu_2$ respectively.</li>
+<li><em><strong>getData()</strong></em> : returns two arrays with the sequences of samples of $X$ and $Y$ collected so far.</li>
+<li><em><strong>addData(</strong>{x : 2.3, y : 9.8}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"X"</em> (i.e. $\mu_1 > \mu_2$) or <em>"Y"</em> ($\mu_2 > \mu_1$) as a string. Note that after the test is finished, the instance will still store new data points added internally, but test statistics and conclusion will not be updated. All stored data points collected can be retrieved via <em>getData()</em>.</li>
+<li><em><strong>expectedSamplesize(</strong>mu_1, mu_2<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true parameters $\mu_1$ and $\mu_2$.</li>
+<li><em><strong>properties()</strong></em> : returns an object with properties of this test that were specified on initialization, in this case <em>delta</em>.</li>
+</ul>
+
+<p>A simple example:</p>
+
+<pre><code>var glr = require('seglir');
+var test = glr.test("normal_pac", 0.05);
+// add data from samples as they come in
+test.addData({x : 100.1});
+test.addData({y : -30.5});
+test.addData({y : 1, x : 0});
+test.addData({x : 0, y : 1}); // returns result "Y", i.e. mu_1 > mu_2
+// get estimates of mu_1, mu_2 and mu_1-mu_2
 test.estimate(); // returns [0, 1, -1]
 </code></pre>
 
