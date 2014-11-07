@@ -104,24 +104,24 @@
 		this.addData = function(points) {
 			var test = false;
 			if (finished) {
-				if (typeof points[0] === 'number') x_data.push(points[0]);
-				if (typeof points[1] === 'number') y_data.push(points[1]);
+				if (typeof points['x'] === 'number') x_data.push(points['x']);
+				if (typeof points['y'] === 'number') y_data.push(points['y']);
 			} else {
-				if (typeof points[0] === 'number' && typeof points[1] === 'number') {
+				if (typeof points['x'] === 'number' && typeof points['y'] === 'number') {
 					if (x_data.length == y_data.length) {
-						S_x += points[0];
-						S_y += points[1];
+						S_x += points['x'];
+						S_y += points['y'];
 					} else if (x_data.length > y_data.length) {
-						S_y += points[1];
+						S_y += points['y'];
 						if (x_data.length == y_data.length+1) {
-							S_x += points[0];
+							S_x += points['x'];
 						} else {
 							S_x += x_data[n_x];
 						}
 					} else {
-						S_x += points[0];
+						S_x += points['x'];
 						if (x_data.length+1 == y_data.length) {
-							S_y += points[1];
+							S_y += points['y'];
 						} else {
 							S_y += y_data[n_y];
 						}
@@ -129,15 +129,15 @@
 					n_x += 1;
 					n_y += 1;
 					test = true;
-					x_data.push(points[0])
-					y_data.push(points[1])
-				} else if (typeof points[0] === 'number') {
+					x_data.push(points['x'])
+					y_data.push(points['y'])
+				} else if (typeof points['x'] === 'number') {
 					if (x_data.length == y_data.length) {
-						S_x += points[0];
+						S_x += points['x'];
 						test = true;
 						n_x += 1;
 					} else if (x_data.length < y_data.length) {
-						S_x += points[0];
+						S_x += points['x'];
 						test = true;
 						n_x += 1;
 						if (x_data.length+1 != y_data.length) {
@@ -145,14 +145,14 @@
 							n_y += 1;
 						}
 					}
-					x_data.push(points[0]);
-				} else if (typeof points[1] === 'number') {
+					x_data.push(points['x']);
+				} else if (typeof points['y'] === 'number') {
 					if (x_data.length == y_data.length) {
-						S_y += points[1];
+						S_y += points['y'];
 						test = true;
 						n_y += 1;
 					} else if (x_data.length > y_data.length) {
-						S_y += points[1];
+						S_y += points['y'];
 						test = true;
 						n_y += 1;
 						if (x_data.length != y_data.length+1) {
@@ -160,7 +160,7 @@
 							n_x += 1;
 						}
 					} 
-					y_data.push(points[1]);
+					y_data.push(points['y']);
 				}
 			}
 			

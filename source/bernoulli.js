@@ -111,39 +111,39 @@
 			// returns true if test is finished
 		this.addData = function(points) {
 			if (finished) {
-				if (typeof points[0] === 'number') x_data.push(points[0]);
-				if (typeof points[1] === 'number') y_data.push(points[1]);
+				if (typeof points['x'] === 'number') x_data.push(points['x']);
+				if (typeof points['y'] === 'number') y_data.push(points['y']);
 			} else {
-				if (typeof points[0] === 'number' && typeof points[1] === 'number') {
+				if (typeof points['x'] === 'number' && typeof points['y'] === 'number') {
 					if (x_data.length == y_data.length) {
-						S_x += points[0];
-						S_y += points[1];
+						S_x += points['x'];
+						S_y += points['y'];
 						n += 1;
 					} else if (x_data.length > y_data.length) {
-						S_y += points[1];
+						S_y += points['y'];
 						S_x += x_data[n];
 						n += 1;
 					} else {
-						S_x += points[0];
+						S_x += points['x'];
 						S_y += y_data[n];
 						n += 1;
 					}
-					x_data.push(points[0])
-					y_data.push(points[1])
-				} else if (typeof points[0] === 'number') {
+					x_data.push(points['x'])
+					y_data.push(points['y'])
+				} else if (typeof points['x'] === 'number') {
 					if (x_data.length < y_data.length) {
-						S_x += points[0];
+						S_x += points['x'];
 						S_y += y_data[n];
 						n += 1;
 					}
-					x_data.push(points[0]);
-				} else if (typeof points[1] === 'number') {
+					x_data.push(points['x']);
+				} else if (typeof points['y'] === 'number') {
 					if (x_data.length > y_data.length) {
-						S_y += points[1];
+						S_y += points['y'];
 						S_x += x_data[n];
 						n += 1;
 					}
-					y_data.push(points[1]);
+					y_data.push(points['y']);
 				}
 			}
 			

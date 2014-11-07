@@ -385,39 +385,39 @@ var glr = function() {
 			// returns true if test is finished
 		this.addData = function(points) {
 			if (finished) {
-				if (typeof points[0] === 'number') x_data.push(points[0]);
-				if (typeof points[1] === 'number') y_data.push(points[1]);
+				if (typeof points['x'] === 'number') x_data.push(points['x']);
+				if (typeof points['y'] === 'number') y_data.push(points['y']);
 			} else {
-				if (typeof points[0] === 'number' && typeof points[1] === 'number') {
+				if (typeof points['x'] === 'number' && typeof points['y'] === 'number') {
 					if (x_data.length == y_data.length) {
-						S_x += points[0];
-						S_y += points[1];
+						S_x += points['x'];
+						S_y += points['y'];
 						n += 1;
 					} else if (x_data.length > y_data.length) {
-						S_y += points[1];
+						S_y += points['y'];
 						S_x += x_data[n];
 						n += 1;
 					} else {
-						S_x += points[0];
+						S_x += points['x'];
 						S_y += y_data[n];
 						n += 1;
 					}
-					x_data.push(points[0])
-					y_data.push(points[1])
-				} else if (typeof points[0] === 'number') {
+					x_data.push(points['x'])
+					y_data.push(points['y'])
+				} else if (typeof points['x'] === 'number') {
 					if (x_data.length < y_data.length) {
-						S_x += points[0];
+						S_x += points['x'];
 						S_y += y_data[n];
 						n += 1;
 					}
-					x_data.push(points[0]);
-				} else if (typeof points[1] === 'number') {
+					x_data.push(points['x']);
+				} else if (typeof points['y'] === 'number') {
 					if (x_data.length > y_data.length) {
-						S_y += points[1];
+						S_y += points['y'];
 						S_x += x_data[n];
 						n += 1;
 					}
-					y_data.push(points[1]);
+					y_data.push(points['y']);
 				}
 			}
 			
@@ -745,21 +745,6 @@ var glr = function() {
 			// return array of mean regret
 			return [glrRegrets, thomRegrets, classRegrets];
 		}
-
-		/*var betaProb = function(prior1,prior2) {
-			var a1 = prior1[0];
-			var b1 = prior1[1];
-			var a2 = prior2[0];
-			var b2 = prior2[1];
-			var sum = 0
-			for (var j = a2;j < a2 + b2;j++) {
-				console.log( jStat.jStat.betafn(j+a1, a2 + b2 - b1 - 1 - j) );
-				console.log( jStat.jStat.betafn(a1, b1) );
-				console.log( jStat.jStat.betafn(j+1,a2+b2-j) );
-				sum += jStat.jStat.betafn(j+a1, a2 + b2 - b1 - 1 - j)/( jStat.jStat.betafn(a1,b1) * jStat.jStat.betafn(j+1,a2+b2-j) );
-			}
-			return sum*(a2+b2);
-		}*/
 
 		var betaProb = function(prior1,prior2) {
 			// from http://www.evanmiller.org/bayesian-ab-testing.html
@@ -1408,24 +1393,24 @@ var glr = function() {
 		this.addData = function(points) {
 			var test = false;
 			if (finished) {
-				if (typeof points[0] === 'number') x_data.push(points[0]);
-				if (typeof points[1] === 'number') y_data.push(points[1]);
+				if (typeof points['x'] === 'number') x_data.push(points['x']);
+				if (typeof points['y'] === 'number') y_data.push(points['y']);
 			} else {
-				if (typeof points[0] === 'number' && typeof points[1] === 'number') {
+				if (typeof points['x'] === 'number' && typeof points['y'] === 'number') {
 					if (x_data.length == y_data.length) {
-						S_x += points[0];
-						S_y += points[1];
+						S_x += points['x'];
+						S_y += points['y'];
 					} else if (x_data.length > y_data.length) {
-						S_y += points[1];
+						S_y += points['y'];
 						if (x_data.length == y_data.length+1) {
-							S_x += points[0];
+							S_x += points['x'];
 						} else {
 							S_x += x_data[n_x];
 						}
 					} else {
-						S_x += points[0];
+						S_x += points['x'];
 						if (x_data.length+1 == y_data.length) {
-							S_y += points[1];
+							S_y += points['y'];
 						} else {
 							S_y += y_data[n_y];
 						}
@@ -1433,15 +1418,15 @@ var glr = function() {
 					n_x += 1;
 					n_y += 1;
 					test = true;
-					x_data.push(points[0])
-					y_data.push(points[1])
-				} else if (typeof points[0] === 'number') {
+					x_data.push(points['x'])
+					y_data.push(points['y'])
+				} else if (typeof points['x'] === 'number') {
 					if (x_data.length == y_data.length) {
-						S_x += points[0];
+						S_x += points['x'];
 						test = true;
 						n_x += 1;
 					} else if (x_data.length < y_data.length) {
-						S_x += points[0];
+						S_x += points['x'];
 						test = true;
 						n_x += 1;
 						if (x_data.length+1 != y_data.length) {
@@ -1449,14 +1434,14 @@ var glr = function() {
 							n_y += 1;
 						}
 					}
-					x_data.push(points[0]);
-				} else if (typeof points[1] === 'number') {
+					x_data.push(points['x']);
+				} else if (typeof points['y'] === 'number') {
 					if (x_data.length == y_data.length) {
-						S_y += points[1];
+						S_y += points['y'];
 						test = true;
 						n_y += 1;
 					} else if (x_data.length > y_data.length) {
-						S_y += points[1];
+						S_y += points['y'];
 						test = true;
 						n_y += 1;
 						if (x_data.length != y_data.length+1) {
@@ -1464,7 +1449,7 @@ var glr = function() {
 							n_x += 1;
 						}
 					} 
-					y_data.push(points[1]);
+					y_data.push(points['y']);
 				}
 			}
 			
@@ -1719,49 +1704,49 @@ var glr = function() {
 		// add single or paired datapoint (control or treatment)
 		this.addData = function(points) {
 			if (finished) {
-				if (typeof points[0] === 'number') x_data.push(points[0]);
-				if (typeof points[1] === 'number') y_data.push(points[1]);
+				if (typeof points['x'] === 'number') x_data.push(points['x']);
+				if (typeof points['y'] === 'number') y_data.push(points['y']);
 			} else {
-				if (typeof points[0] === 'number' && typeof points[1] === 'number') {
+				if (typeof points['x'] === 'number' && typeof points['y'] === 'number') {
 					if (x_data.length == y_data.length) {
-						S_x += points[0];
-						S_y += points[1];
-						S_x2 += points[0]*points[0];
-						S_y2 += points[1]*points[1];
+						S_x += points['x'];
+						S_y += points['y'];
+						S_x2 += points['x']*points['x'];
+						S_y2 += points['y']*points['y'];
 						n += 1;
 					} else if (x_data.length > y_data.length) {
 						S_x += x_data[n];
-						S_y += points[1];
+						S_y += points['y'];
 						S_x2 += x_data[n]*x_data[n];
-						S_y2 += points[1]*points[1];
+						S_y2 += points['y']*points['y'];
 						n += 1;
 					} else {
-						S_x += points[0];
+						S_x += points['x'];
 						S_y += y_data[n];
-						S_x2 += points[0]*points[0];
+						S_x2 += points['x']*points['x'];
 						S_y2 += y_data[n]*y_data[n];
 						n += 1;
 					}
-					x_data.push(points[0])
-					y_data.push(points[1])
-				} else if (typeof points[0] === 'number') {
+					x_data.push(points['x'])
+					y_data.push(points['y'])
+				} else if (typeof points['x'] === 'number') {
 					if (x_data.length < y_data.length) {
-						S_x += points[0];
+						S_x += points['x'];
 						S_y += y_data[n];
-						S_x2 += points[0]*points[0];
+						S_x2 += points['x']*points['x'];
 						S_y2 += y_data[n]*y_data[n];
 						n += 1;
 					}
-					x_data.push(points[0]);
-				} else if (typeof points[1] === 'number') {
+					x_data.push(points['x']);
+				} else if (typeof points['y'] === 'number') {
 					if (x_data.length > y_data.length) {
 						S_x += x_data[n];
-						S_y += points[1];
+						S_y += points['y'];
 						S_x2 += x_data[n]*x_data[n];
-						S_y2 += points[1]*points[1];
+						S_y2 += points['y']*points['y'];
 						n += 1;
 					}
-					y_data.push(points[1]);
+					y_data.push(points['y']);
 				}
 			}
 			
@@ -2528,24 +2513,24 @@ var glr = function() {
 		this.addData = function(points) {
 			var test = false;
 			if (finished) {
-				if (typeof points[0] === 'number') x_data.push(points[0]);
-				if (typeof points[1] === 'number') y_data.push(points[1]);
+				if (typeof points['x'] === 'number') x_data.push(points['x']);
+				if (typeof points['y'] === 'number') y_data.push(points['y']);
 			} else {
-				if (typeof points[0] === 'number' && typeof points[1] === 'number') {
+				if (typeof points['x'] === 'number' && typeof points['y'] === 'number') {
 					if (x_data.length == y_data.length) {
-						S_x += points[0];
-						S_y += points[1];
+						S_x += points['x'];
+						S_y += points['y'];
 					} else if (x_data.length > y_data.length) {
-						S_y += points[1];
+						S_y += points['y'];
 						if (x_data.length == y_data.length+1) {
-							S_x += points[0];
+							S_x += points['x'];
 						} else {
 							S_x += x_data[n_x];
 						}
 					} else {
-						S_x += points[0];
+						S_x += points['x'];
 						if (x_data.length+1 == y_data.length) {
-							S_y += points[1];
+							S_y += points['y'];
 						} else {
 							S_y += y_data[n_y];
 						}
@@ -2553,15 +2538,15 @@ var glr = function() {
 					n_x += 1;
 					n_y += 1;
 					test = true;
-					x_data.push(points[0])
-					y_data.push(points[1])
-				} else if (typeof points[0] === 'number') {
+					x_data.push(points['x'])
+					y_data.push(points['y'])
+				} else if (typeof points['x'] === 'number') {
 					if (x_data.length == y_data.length) {
-						S_x += points[0];
+						S_x += points['x'];
 						test = true;
 						n_x += 1;
 					} else if (x_data.length < y_data.length) {
-						S_x += points[0];
+						S_x += points['x'];
 						test = true;
 						n_x += 1;
 						if (x_data.length+1 != y_data.length) {
@@ -2569,14 +2554,14 @@ var glr = function() {
 							n_y += 1;
 						}
 					}
-					x_data.push(points[0]);
-				} else if (typeof points[1] === 'number') {
+					x_data.push(points['x']);
+				} else if (typeof points['y'] === 'number') {
 					if (x_data.length == y_data.length) {
-						S_y += points[1];
+						S_y += points['y'];
 						test = true;
 						n_y += 1;
 					} else if (x_data.length > y_data.length) {
-						S_y += points[1];
+						S_y += points['y'];
 						test = true;
 						n_y += 1;
 						if (x_data.length != y_data.length+1) {
@@ -2584,7 +2569,7 @@ var glr = function() {
 							n_x += 1;
 						}
 					} 
-					y_data.push(points[1]);
+					y_data.push(points['y']);
 				}
 			}
 			
