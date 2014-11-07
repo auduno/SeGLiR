@@ -528,6 +528,7 @@
 				if (choice != correct_choice) {
 					errors += 1;
 				}
+				console.log(i+" : "+(errors/(i+1)));
 			}
 			return errors/samples;
 		}

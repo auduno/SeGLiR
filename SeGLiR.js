@@ -802,6 +802,7 @@ var glr = function() {
 				if (choice != correct_choice) {
 					errors += 1;
 				}
+				console.log(i+" : "+(errors/(i+1)));
 			}
 			return errors/samples;
 		}
@@ -1680,8 +1681,8 @@ var glr = function() {
 			var upper_est = outcomes[upper_n];
 
 			// bias correct the lower and upper estimates
-			var lower_est_bc = optimize2d(lower_est, biasFun(), lower_est, 0.005, 16400, 590000, 0.02, 0, 1, false);
-			var upper_est_bc = optimize2d(upper_est, biasFun(), upper_est, 0.005, 16400, 590000, 0.02, 0, 1, false);
+			var lower_est_bc = optimize2d(lower_est, biasFun(), lower_est, 0.005, 16400, 590000, 0.02, undefined, undefined, false);
+			var upper_est_bc = optimize2d(upper_est, biasFun(), upper_est, 0.005, 16400, 590000, 0.02, undefined, undefined, false);
 
 			return [(lower_est_bc[0]-lower_est_bc[1]),(upper_est_bc[0]-upper_est_bc[1])];
 		}
@@ -1692,7 +1693,7 @@ var glr = function() {
 			if (!finished) {
 				return undefined;
 			}
-			var ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, 590000, 0.02, 0, 1, false);
+			var ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, 590000, 0.02, undefined, undefined, false);
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}
@@ -1823,12 +1824,19 @@ var glr = function() {
 		}
 		
 		var biasFun = function() {
+			var est_var;
+			if (typeof(variance) == "undefined") {
+				est_var = (n*S_x2 - S_x*S_x + n*S_y2 - S_y*S_y)/(2*n*(n-1));
+			} else {
+				est_var = variance;
+			}
+
 			var outfun = function(parameters, n) {
 				var results_p1 = []
 				var results_p2 = []
 				for (var i = 0;i < n;i++) {
 					// generate sequences
-					var res = simulateResult(parameters[0], parameters[1], b0, b1);
+					var res = simulateResult([parameters[0],est_var], [parameters[1],est_var], b0, b1);
 					results_p1.push( res[1]/res[5] );
 					results_p2.push( res[2]/res[5] );
 				}
@@ -2488,8 +2496,8 @@ var glr = function() {
 			var upper_est = outcomes[upper_n];
 
 			// bias correct the lower and upper estimates
-			var lower_est_bc = optimize2d(lower_est, biasFun(), lower_est, 0.005, 16400, 590000, 0.02, 0, 1, false);
-			var upper_est_bc = optimize2d(upper_est, biasFun(), upper_est, 0.005, 16400, 590000, 0.02, 0, 1, false);
+			var lower_est_bc = optimize2d(lower_est, biasFun(), lower_est, 0.005, 16400, 590000, 0.02, undefined, undefined, false);
+			var upper_est_bc = optimize2d(upper_est, biasFun(), upper_est, 0.005, 16400, 590000, 0.02, undefined, undefined, false);
 
 			return [(lower_est_bc[0]-lower_est_bc[1]),(upper_est_bc[0]-upper_est_bc[1])];
 		}
@@ -2500,7 +2508,7 @@ var glr = function() {
 			if (!finished) {
 				return undefined;
 			}
-			var ests = optimize2d([S_x/n_x, S_y/n_y], biasFun(), [S_x/n_x, S_y/n_y], 0.005, 16400, 590000, 0.02, 0, 1, false);
+			var ests = optimize2d([S_x/n_x, S_y/n_y], biasFun(), [S_x/n_x, S_y/n_y], 0.005, 16400, 590000, 0.02, undefined, undefined, false);
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}
@@ -2652,7 +2660,7 @@ var glr = function() {
 				var results_p2 = []
 				for (var i = 0;i < n;i++) {
 					// generate sequences
-					var res = simulateResult(parameters[0], parameters[1]);
+					var res = simulateResult([parameters[0], var_value], [parameters[1], var_value]);
 					results_p1.push( res[1]/res[5] );
 					results_p2.push( res[2]/res[5] );
 				}
