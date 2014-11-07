@@ -472,6 +472,66 @@
 			return [glrRegrets, thomRegrets, classRegrets];
 		}
 
+		var betaProb = function(prior1,prior2) {
+			// from http://www.evanmiller.org/bayesian-ab-testing.html
+			var a1 = prior1[0];
+			var b1 = prior1[1];
+			var a2 = prior2[0];
+			var b2 = prior2[1];
+			var sum = 0
+			for (var i = 0;i < a2;i++) {
+				//sum += jStat.jStat.betafn(i + a1, b1 + b2)/( (b2+i)*jStat.jStat.betafn(1 + i, b2) * jStat.jStat.betafn(a1, b1) );
+				sum += Math.exp( jStat.jStat.betaln(i + a1, b1 + b2) - Math.log(b2+i) - jStat.jStat.betaln(1 + i, b2) - jStat.jStat.betaln(a1, b1) );
+			}
+			return 1-sum;
+		}
+		this.betaProb = betaProb;
+
+		this.expectedThomError = function(p1, p2, samples) {
+			var errors = 0;
+			var correct_choice = p1 <= p2 ? 1 : 0;
+			for (var i = 0;i < samples;i++) {
+				//console.log("p1:"+p1+",p2:"+p2);
+				var prior1 = [1,1];
+				var prior2 = [1,1];
+				var S_x = 0;
+				var S_y = 0;
+				var time = 0;
+				var finished = false;
+				var choice = undefined;
+				var j = 0;
+				while (!finished) {
+					j += 1;
+					var a = Math.random() < p1 ? 1 : 0;
+					var b = Math.random() < p2 ? 1 : 0;
+					// bayes bandit : pull from prior, choose, etc.
+					var a_post_sample = jStat.jStat.beta.sample(prior1[0], prior1[1]);
+					var b_post_sample = jStat.jStat.beta.sample(prior2[0], prior2[1]);
+					if (a_post_sample >= b_post_sample) {
+						// choose sample a
+						prior1[0] += a;
+						prior1[1] += (1-a);
+					} else {
+						// choose sample b
+						prior2[0] += b;
+						prior2[1] += (1-b);
+					}
+					var prob = betaProb(prior1,prior2)
+					if (prob > 0.95) {
+						finished = true;
+						choice = 0;
+					} else if (1-prob > 0.95) {
+						finished = true;
+						choice = 1;
+					}
+				}
+				if (choice != correct_choice) {
+					errors += 1;
+				}
+			}
+			return errors/samples;
+		}
+
 		this.compareMAB2 = function(samples, length,eps) {
 			var glrRegrets = [];
 			var thomRegrets = [];
