@@ -422,15 +422,14 @@ test.estimate(); // returns [0, 1, -1]
 <p>A simple example:</p>
 
 <pre><code>var glr = require('seglir');
-var test = glr.test("normal","two-sided",0.01,0.05,0.10,1);
+var test = glr.test("normal","two-sided",0.1,0.05,0.1,1)
 // add data from samples as they come in
-test.addData({x : 0});
-test.addData({y : 1});
-test.addData({y : 1, x : 0});
-test.addData({x : 0, y : 1});
-test.addData({y : 1, x : 0}); // returns result "false", i.e. we reject the null-hypothesis
+test.addData({'x':5.2})
+test.addData({'y':8.3})
+test.addData({'x': 4.7, 'y': 7.1})
+test.addData({'x': 2.0, 'y' : 9.0}) // returns 'false', i.e. we reject the null-hypothesis
 // get estimates of mu_1, mu_2 and mu_1-mu_2
-test.estimate(); // returns [0, 1, -1]
+test.estimate() // returns [4.1673, 7.9274, -3.7601]
 </code></pre>
 
 <h2>Best arm selection with δ-PAC guarantees</h2>
@@ -505,14 +504,14 @@ test.estimate(); // returns [0, 1, -1]
 <p>A simple example:</p>
 
 <pre><code>var glr = require('seglir');
-var test = glr.test("normal_pac", 0.05);
+var test = glr.test("normal_pac",0.05,1)
 // add data from samples as they come in
-test.addData({x : 100.1});
-test.addData({y : -30.5});
-test.addData({y : 1, x : 0});
-test.addData({x : 0, y : 1}); // returns result "Y", i.e. mu_1 > mu_2
+test.addData({'x':5.2})
+test.addData({'y':8.3})
+test.addData({'x': 4.7, 'y': 7.1})
+test.addData({'x': 2.0, 'y' : 9.0}) // returns 'Y', i.e. mu_2 > mu_1
 // get estimates of mu_1, mu_2 and mu_1-mu_2
-test.estimate(); // returns [0, 1, -1]
+test.estimate() // returns [4.0177, 8.0822, -4.0617]
 </code></pre>
 
 <sup>Footnotes:</sup><br/>
