@@ -3,6 +3,12 @@
 
 	var bernoulli_pac = function(delta_value) {
 
+		// check input
+		if (typeof(delta_value) != 'number' || delta_value <= 0 || delta_value >= 1) {
+			console.log("parameter 'delta_value' must be a number between 0 and 1, input was : "+delta_value);
+			return;
+		}
+
 		var delta = delta_value; // the error guarantee we want
 		var x_data = [];
 		var y_data = [];

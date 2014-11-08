@@ -5,6 +5,24 @@
 
 		var b0, b1, stoppingTime;
 
+		// check input
+		if (sides != "one-sided" && sides != "two-sided") {
+			console.log("parameter 'sides' must be either 'one-sided' or 'two-sided', input was : '"+sides+"'!");
+			return;
+		}
+		if (typeof(indifference) != 'number' || indifference <= 0) {
+			console.log("parameter 'indifference' must be a number above zero, input was : "+indifference);
+			return;
+		}
+		if (typeof(type1_error) != 'number' || type1_error <= 0 || type1_error >= 1) {
+			console.log("parameter 'type1_error' must be a number between 0 and 1, input was : "+type1_error);
+			return;
+		}
+		if (typeof(type2_error) != 'number' || type2_error <= 0 || type2_error >= 1) {
+			console.log("parameter 'type2_error' must be a number between 0 and 1, input was : "+type2_error);
+			return;
+		}
+
 		var x_data = [];
 		var y_data = [];
 		var n = 0;
