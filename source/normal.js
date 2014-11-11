@@ -772,6 +772,12 @@
 		return Math.exp( 1/(2*var_value)*(pos_lik_part - mle_lik_part) );
 	}
 
+	var normal_kv_twosided_maxSamplesize = function(indiff, var_value, b0, b1) {
+		var part = Math.sqrt(Math.log(b0)) + Math.sqrt(Math.log(b1));
+		var max = part*part*(4*var_value)/(indiff*indiff);
+		return max;
+	}
+
 	functions['normal_uv'] = {
 		'two-sided' : {
 			'l_an' : normal_uv_twosided_LR_H0,
