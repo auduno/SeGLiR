@@ -38,12 +38,11 @@
 
 <!--<h2 id="process">Flow</h2>-->
 
-<p>SeGLiR is a javascript implementation of hypothesis testing (aka A/B-testing) with Sequential Generalized Likelihood Ratio Tests. Sequential Generalized Likelihood Ratio Tests (or Sequential GLR tests for short) are a family of <a href="http://en.wikipedia.org/wiki/Sequential_analysis">sequential hypothesis tests</a> that will stop as soon as we are able to reject a hypothesis, while still keeping type-1 and type-2 error guarantees. Compared to fixed-sample size tests, this may give a significant decrease in the needed samplesize, at the cost of a larger <em>worst-case</em> samplesize as well as some loss of precision in estimates when the test is done. The test has been shown<sup><a href="#fn1">1</a></sup> to be <em>uniformly first-order asymptotically optimal</em> with regard to minimizing samplesize for tests based on a <a href="http://en.wikipedia.org/wiki/Exponential_family">exponential family</a> parameter. To get some idea about the performance of the test, here's the expected samplesize depending on the true differences between the true parameters in a two-sided comparison of proportions, for a fixed-samplesize and a sequential glr test. Both tests had alpha-level....
-
-For some idea about the difference in expected samplesize, here's numbers from a comparison of bernoulli proportions with a fixed sample-size test and a sequential GLR test, both with $\alpha$-level 0.05, $\beta$-level 0.10 and $\delta$ = 0.01.</p>
+<p>SeGLiR is a javascript implementation of hypothesis testing (aka A/B-testing) with Sequential Generalized Likelihood Ratio Tests (Sequential GLR tests for short). Sequential GLR tests are a family of <a href="http://en.wikipedia.org/wiki/Sequential_analysis">sequential hypothesis tests</a> that will stop as soon as we are able to reject a hypothesis, while still keeping type-1 and type-2 error guarantees. Compared to fixed-sample size tests, this may give a significant decrease in the needed samplesize, at the cost of a larger <em>worst-case</em> samplesize as well as some loss of precision in estimates when the test is done. The test has been shown<sup><a href="#fn1">1</a></sup> to be <em>uniformly first-order asymptotically optimal</em> with regard to minimizing samplesize for tests based on a <a href="http://en.wikipedia.org/wiki/Exponential_family">exponential family</a> parameter. To get some idea about the potential savings of the test, here's a comparison of the expected needed samplesize for a fixed samplesize and sequential GLR test in a two-sided comparison of proportions test. Both have $\alpha$-level 0.05, $\beta$-level 0.10 and $\delta$ = 0.01.</p>
 
 <p style="text-align:center">
-  <a href="../images/samplesize1.png" rel="lightbox" title="Expected Samplesize"><img src="../images/samplesize1.png" width="400px" height="305px">
+  <a href="../images/samplesize2b.png" rel="lightbox" title="Expected Samplesize"><img src="../images/samplesize2b.png" width="500px" height="271px">
+  <!--<a href="../images/samplesize2b.png" rel="lightbox" title="Expected Samplesize"><img src="../images/samplesize1.png" width="400px" height="305px">-->
   </a>
 </p>
 
@@ -321,7 +320,7 @@ If this function returns the strings "true" or "false", the test has finished. "
 <p>This library currently implements these types of Sequential GLR tests:</p>
 <ul>
   <li>Comparing two bernoulli proportions</li>
-  <li>Comparing two gaussian means, with unknown but equal variance</li>
+  <li>Comparing two gaussian means, with equal and either known or unknown variance</li>
   <li>Selecting the best arm in a two-armed bandit setting, with δ-PAC guarantees</li>
 </ul>
 <p>There are some differences between the functions for these tests, so consult more detailed reference for each test below.</p>
