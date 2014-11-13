@@ -1579,7 +1579,7 @@ var glr = function() {
 	
 	/*** test for comparing normal means, unknown or known variance ***/
 
-	var normal_test = function(sides, indifference, type1_error, type2_error, variance, variance_bound, t0) {
+	var normal_test = function(sides, indifference, type1_error, type2_error, variance, variance_bound) {
 
 		var b0, b1, stoppingTime, var_bound, var_value;
 
@@ -1621,11 +1621,6 @@ var glr = function() {
 			var_bound = variance_bound;
 		} else {
 			var_value = variance;
-		}
-		if (typeof(t0) == "undefined") {
-			var t_0 = 0;
-		} else {
-			var t_0 = t0;
 		}
 		// sufficient stats for test is sum(x_i), sum(y_i), sum(x_i^2) and sum(y_i^2)
 		var S_x = 0;
@@ -1832,9 +1827,6 @@ var glr = function() {
 
 		var checkTest = function(S_x, S_y, S_x2, S_y2, n, d, b0, b1) {
 			// check if test should be stopped
-			if (n < t_0) {
-				return undefined;
-			}
 			// TODO : should I check for when both L_an and L_bn pass thresholds?
 			var L_an = LikH0(S_x, S_y, S_x2, S_y2, n, d, var_value);
 			if (L_an >= b0) {
@@ -1922,7 +1914,7 @@ var glr = function() {
 			console.log("calculating thresholds via simulation")
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [50,10], 0.001, 46000, 400000, 6, 1)
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [98,14.5], 0.001, 46000, 1500000, 6, 1)
-			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [200,9], 0.001, 46000, 1500000, 6, 1)
+			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [100,100], 0.001, 46000, 1500000, 6, 1)
 			b0 = thr[0];
 			b1 = thr[1];
 		}
@@ -1968,7 +1960,7 @@ var glr = function() {
 		return alphas;
 	}
 
-	var normal_twosided_alpha_imp = function(b0, b1, indiff, var_val, simulateResult, samples, t_0) {
+	var normal_twosided_alpha_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
 		var alphas = [];
 		var beta = 1; // precision/inverse-variance of the importance sampling distribution
@@ -1985,9 +1977,6 @@ var glr = function() {
 				// pull xs from N(0,2*var_val)
 				S_x += jStat.jStat.normal.sample(z,Math.sqrt(2*var_val));
 
-				if (n < t_0) {
-					continue;
-				}
 				// test on simplified boundaries
 				var L_na = Math.exp( S_x*S_x/(4*n*var_val) );
 				if (L_na >= b0) {
@@ -2102,7 +2091,7 @@ var glr = function() {
 		return betas;
 	}
 
-	var normal_twosided_beta_imp = function(b0, b1, indiff, var_val, simulateResult, samples, t_0) {
+	var normal_twosided_beta_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
 		var betas = [];
 		//var starttime = (new Date()).getTime();
@@ -2115,10 +2104,6 @@ var glr = function() {
 				n += 1;
 				// pull xs from N(0,2*var_val)
 				S_x += jStat.jStat.normal.sample(0,Math.sqrt(2*var_val));
-
-				if (n < t_0) {
-					continue;
-				}
 				
 				// test on simplified boundaries
 				var L_na = Math.exp( S_x*S_x/(4*n*var_val) );
@@ -2220,6 +2205,63 @@ var glr = function() {
 		return alphas;
 	}
 
+	var normal_onesided_alpha_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
+		if (!samples) samples = 10000;
+		var alphas = [];
+		var beta = 1; // precision/inverse-variance of the importance sampling distribution
+		//var starttime = (new Date()).getTime();
+		for (var i = 0;i < samples;i++) {
+			var z = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
+			z = Math.abs(z);
+
+			var finished = false;
+			var S_x = 0;
+			var n = 0;
+			var result = undefined;
+			while (!finished) {
+				n += 1;
+				// pull xs from N(0,2*var_val)
+				S_x += jStat.jStat.normal.sample(z,Math.sqrt(2*var_val));
+
+				var mle = S_x/n;
+				// test on simplified boundaries
+				if (mle < -indiff) {
+					var L_na = 1;
+				} else {
+					var L_na = Math.exp( n*(S_x/n + indiff)*(S_x/n + indiff)/(4*var_val) );
+				}
+				if (L_na >= b0) {
+					finished = true;
+					result = "false"
+				}
+				if (mle > indiff) {
+					var L_nb = 1;
+				} else {
+					var L_nb = Math.exp( n*(S_x/n - indiff)*(S_x/n - indiff)/(4*var_val) );
+				}
+				if (L_nb >= b1) {
+					finished = true;
+					result = "true";
+				}
+			}
+
+			if (result == 'false') {
+				var delta = (n + 2*var_val*beta)/(4*var_val);
+				var pt1 = Math.sqrt(beta/(2*delta));
+				var pt2 = Math.exp((2*indiff*S_x + n*indiff*indiff)/(4*var_val) + (S_x*S_x)/(16*delta*var_val*var_val));
+				var pt3 = jStat.jStat.erf(S_x/(4*var_val*Math.sqrt(delta))) + 1;
+				var weight = pt1*pt2*pt3;
+				alphas.push(1/weight);
+			} else {
+				alphas.push(0);
+			}
+		}
+		//console.log("time:"+( (new Date()).getTime()-starttime ))
+		//console.log("mean:"+mean(alphas));
+		//console.log("std_err:"+boot_std(alphas,1000));
+		return alphas;
+	}
+
 	var normal_onesided_beta = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
 		var betas = [];
@@ -2233,6 +2275,63 @@ var glr = function() {
 		}
 		return betas;
 		// TODO : should we include std.dev.?
+	}
+
+	var normal_onesided_beta_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
+		if (!samples) samples = 10000;
+		var betas = [];
+		var beta = 1; // precision/inverse-variance of the importance sampling distribution
+		//var starttime = (new Date()).getTime();
+		for (var i = 0;i < samples;i++) {
+			var z = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
+			z = Math.abs(z);
+
+			var finished = false;
+			var S_x = 0;
+			var n = 0;
+			var result = undefined;
+			while (!finished) {
+				n += 1;
+				// pull xs from N(0,2*var_val)
+				S_x += jStat.jStat.normal.sample(-z,Math.sqrt(2*var_val));
+
+				var mle = S_x/n;
+				// test on simplified boundaries
+				if (mle < -indiff) {
+					var L_na = 1;
+				} else {
+					var L_na = Math.exp( n*(S_x/n + indiff)*(S_x/n + indiff)/(4*var_val) );
+				}
+				if (L_na >= b0) {
+					finished = true;
+					result = "false"
+				}
+				if (mle > indiff) {
+					var L_nb = 1;
+				} else {
+					var L_nb = Math.exp( n*(S_x/n - indiff)*(S_x/n - indiff)/(4*var_val) );
+				}
+				if (L_nb >= b1) {
+					finished = true;
+					result = "true";
+				}
+			}
+
+			if (result == 'true') {
+				var delta = (n + 2*var_val*beta)/(4*var_val);
+				var pt1 = Math.sqrt(beta/(2*delta));
+				var pt2 = Math.exp((-2*indiff*S_x + n*indiff*indiff)/(4*var_val) + (S_x*S_x)/(16*delta*var_val*var_val));
+				var pt3 = 1 - jStat.jStat.erf(S_x/(4*var_val*Math.sqrt(delta)));
+				var weight = pt1*pt2*pt3;
+				betas.push(1/weight);
+			} else {
+				betas.push(0);
+			}
+		}
+		//console.log("time:"+( (new Date()).getTime()-starttime ))
+		//console.log("mean:"+mean(betas));
+		//console.log("std_err:"+boot_std(betas,1000));
+		return betas;
 	}
 
 	var normal_uv_onesided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff) {
@@ -2350,6 +2449,12 @@ var glr = function() {
 		return Math.exp( 1/(2*var_value)*(pos_lik_part - mle_lik_part) );
 	}
 
+	var normal_kv_twosided_maxSamplesize = function(indiff, var_value, b0, b1) {
+		var part = Math.sqrt(Math.log(b0)) + Math.sqrt(Math.log(b1));
+		var max = part*part*(4*var_value)/(indiff*indiff);
+		return max;
+	}
+
 	functions['normal_uv'] = {
 		'two-sided' : {
 			'l_an' : normal_uv_twosided_LR_H0,
@@ -2377,8 +2482,8 @@ var glr = function() {
 		'one-sided' : {
 			'l_an' : normal_kv_onesided_LR_H0,
 			'l_bn' : normal_kv_onesided_LR_HA,
-			'alpha' : normal_onesided_alpha,
-			'beta' : normal_onesided_beta,
+			'alpha' : normal_onesided_alpha_imp,
+			'beta' : normal_onesided_beta_imp,
 			'simulateH0' : normal_onesided_simulateH0,	
 		}
 	}
@@ -2430,7 +2535,16 @@ var glr = function() {
 			0.05 : { // alpha
 				0.05 : { // beta
 					0.1 : { // indifference
-						1 : [49, 49], // variance, TODO : check result
+						1 : [51.3, 51.3], // variance
+					},
+					0.05 : { // indifference
+						1 : [66, 66], // variance
+					},
+					0.025 : { // indifference
+						1 : [81.3, 81.3], // variance
+					},
+					0.01 : { // indifference
+						1 : [102.5, 102.5], // variance
 					}
 				}
 			}
