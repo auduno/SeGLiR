@@ -5,7 +5,12 @@ SeGLiR
 
 Sequential generalized likelihood ratio tests is a family of [sequential hypothesis tests](http://en.wikipedia.org/wiki/Sequential_analysis), i.e. tests that stop as soon as a significant result has been detected in accordance with some stopping rule. Compared to classical fixed sample-size tests, sequential generalized likelihood ratio tests usually give a significant decrease in the needed samplesize, while keeping the same type-1 and type-2 error guarantees. For a more detailed explanation of this family of tests, see [the reference](http://auduno.github.io/seglir/documentation.html#math).
 
-SeGLiR currently contain tests for comparing two bernoulli proportions (for instance for comparing conversion on a website), comparing two normal means (with equal but unknown variance), as well as tests for choosing the best arm in a multi-armed bandit setting (with δ-PAC guarantees).
+![Expected samplesize comparison](https://dl.dropboxusercontent.com/u/10557805/samplesize2b.png)
+
+SeGLiR currently contain these tests:
+* comparing two bernoulli proportions (for instance for comparing conversion on a website)
+* comparing two normal means (with equal, known or unknown variance)
+* choosing the best arm in a multi-armed bandit setting (with δ-PAC guarantees)
 
 Improvements and additions are welcome, take a look at [issues](https://github.com/auduno/seglir/issues) for outstanding issues.
 
