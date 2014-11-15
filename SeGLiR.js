@@ -2585,7 +2585,10 @@ var glr = function() {
 						1 : [433, 8.85], // variance bound
 					},
 					0.05 : { // indifference
-						1 : [433, 8.85], // variance bound
+						1 : [482.5, 9.0], // variance bound, approximate
+					},
+					0.025 : { // indifference
+						1 : [532, 9.1], // variance bound, needs to be tested more properly
 					},
 				}
 			}
