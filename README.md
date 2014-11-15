@@ -3,7 +3,7 @@ SeGLiR
 
 **SeGLiR** is a javascript library for rapid A/B-testing with **Sequential Generalized Likelihood Ratio Tests**.
 
-Sequential generalized likelihood ratio tests is a family of [sequential hypothesis tests](http://en.wikipedia.org/wiki/Sequential_analysis), i.e. tests that stop as soon as a significant result has been detected in accordance with some stopping rule. Compared to classical fixed sample-size tests, sequential generalized likelihood ratio tests usually give a significant decrease in the needed samplesize, while keeping the same type-1 and type-2 error guarantees. For a more detailed explanation of this family of tests, see [the reference](http://auduno.github.io/seglir/documentation.html#math).
+Sequential generalized likelihood ratio tests is a family of [sequential hypothesis tests](http://en.wikipedia.org/wiki/Sequential_analysis), i.e. tests that stop as soon as a significant result has been detected in accordance with some stopping rule. Compared to classical fixed samplesize tests, sequential generalized likelihood ratio tests may give a significant decrease in the needed samplesize, while keeping the same type-1 and type-2 error guarantees. Below is a comparison of the expected samplesize for fixed samplesize and sequential glr tests at the same levels. For a more detailed explanation of this family of tests, see [the reference](http://auduno.github.io/seglir/documentation.html#math).
 
 ![Expected samplesize comparison](https://dl.dropboxusercontent.com/u/10557805/samplesize2b.png)
 
