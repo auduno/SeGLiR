@@ -2279,6 +2279,7 @@ var glr = function() {
 
 	var normal_onesided_alpha = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
+		var starttime = (new Date()).getTime();
 		var alphas = [];
 		for (var i = 0;i < samples;i++) {
 			var res = simulateResult([0-indiff/2,var_val],[0+indiff/2,var_val],b0,b1);
@@ -2288,6 +2289,9 @@ var glr = function() {
 				alphas.push(0);
 			}
 		}
+		console.log("time:"+( (new Date()).getTime()-starttime ))
+		console.log("mean:"+mean(alphas));
+		console.log("std_err:"+boot_std(alphas,1000));
 		return alphas;
 	}
 
@@ -2348,9 +2352,42 @@ var glr = function() {
 		return alphas;
 	}
 
+	var normal_uv_onesided_alpha_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
+		if (!samples) samples = 10000;
+		var starttime = (new Date()).getTime();
+		var alphas = [];
+		var beta = 1;
+		for (var i = 0;i < samples;i++) {
+			var z = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
+			z = Math.abs(z);
+
+			var res = simulateResult([z/2,var_val],[-z/2,var_val],b0,b1);
+			if (res[0] == 'false') {
+				var S_x = res[1];
+				var S_y = res[2];
+				var n = res[5];
+				var delta = (n + 2*var_val*beta)/(4*var_val);
+				var pt1 = Math.sqrt(beta/(2*delta));
+				var pt2 = Math.exp((S_x - S_y)*(S_x - S_y)/(delta*16*var_val*var_val) + (indiff*(S_x - S_y + (n*indiff)/2)/(2*var_val)));
+				var pt3 = jStat.jStat.erf((S_x - S_y)/Math.sqrt(4*var_val*(n + 2*beta*var_val))) + 1;
+				var weight = pt1*pt2*pt3;
+				alphas.push(1/weight);
+			} else {
+				alphas.push(0);
+			}
+		}
+		console.log("time:"+( (new Date()).getTime()-starttime ))
+		var mn = mean(alphas);
+		console.log("mean:"+mean(alphas));
+		console.log("est std_err:"+Math.sqrt( mn*(1-mn)/samples ))
+		//console.log("boot std_err:"+boot_std(alphas,1000));
+		return alphas;
+	}
+
 	var normal_onesided_beta = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
 		var betas = [];
+		var starttime = (new Date()).getTime();
 		for (var i = 0;i < samples;i++) {
 			var res = simulateResult([0+indiff/2,var_val],[0-indiff/2,var_val],b0,b1);
 			if (res[0] == 'true') {
@@ -2359,8 +2396,10 @@ var glr = function() {
 				betas.push(0);
 			}
 		}
+		console.log("time:"+( (new Date()).getTime()-starttime ))
+		console.log("mean:"+mean(betas));
+		console.log("std_err:"+boot_std(betas,1000));
 		return betas;
-		// TODO : should we include std.dev.?
 	}
 
 	var normal_onesided_beta_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
@@ -2417,6 +2456,36 @@ var glr = function() {
 		//console.log("time:"+( (new Date()).getTime()-starttime ))
 		//console.log("mean:"+mean(betas));
 		//console.log("std_err:"+boot_std(betas,1000));
+		return betas;
+	}
+
+	var normal_uv_onesided_beta_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
+		if (!samples) samples = 10000;
+		var starttime = (new Date()).getTime();
+		var betas = [];
+		var beta = 1;
+		for (var i = 0;i < samples;i++) {
+			var z = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
+			z = Math.abs(z);
+
+			var res = simulateResult([-z/2,var_val],[z/2,var_val],b0,b1);
+			if (res[0] == 'true') {
+				var S_x = res[1];
+				var S_y = res[2];
+				var n = res[5];
+				var delta = (n + 2*var_val*beta)/(4*var_val);
+				var pt1 = Math.sqrt(beta/(2*delta));
+				var pt2 = Math.exp((S_x - S_y)*(S_x - S_y)/(delta*16*var_val*var_val) - (indiff*(S_x - S_y - (n*indiff)/2)/(2*var_val)));
+				var pt3 = jStat.jStat.erf(-(S_x - S_y)/(4*var_val*Math.sqrt(delta))) + 1;
+				var weight = pt1*pt2*pt3;
+				betas.push(1/weight);
+			} else {
+				betas.push(0);
+			}
+		}
+		console.log("time:"+( (new Date()).getTime()-starttime ))
+		console.log("mean:"+mean(betas));
+		console.log("std_err:"+boot_std(betas,1000));
 		return betas;
 	}
 
@@ -2554,8 +2623,10 @@ var glr = function() {
 		'one-sided' : {
 			'l_an' : normal_uv_onesided_LR_H0,
 			'l_bn' : normal_uv_onesided_LR_HA,
-			'alpha' : normal_onesided_alpha,
-			'beta' : normal_onesided_beta,
+			//'alpha' : normal_onesided_alpha,
+			'alpha' : normal_uv_onesided_alpha_imp,
+			//'beta' : normal_onesided_beta,
+			'beta' : normal_uv_onesided_beta_imp,
 			'simulateH0' : normal_onesided_simulateH0,	
 		}
 	}
@@ -2585,11 +2656,14 @@ var glr = function() {
 						1 : [433, 8.85], // variance bound
 					},
 					0.05 : { // indifference
-						1 : [482.5, 9.0], // variance bound, approximate
+						1 : [482.5, 9.0], // variance bound, 
 					},
 					0.025 : { // indifference
-						1 : [532, 9.1], // variance bound, needs to be tested more properly
+						1 : [532.5, 9.1], // variance bound,
 					},
+					0.01 : { // indifference
+						1 : [600, 9.15], // variance bound, 
+					}
 				}
 			}
 		},
@@ -2597,7 +2671,16 @@ var glr = function() {
 			0.05 : { // alpha
 				0.05 : { // beta
 					0.1 : { // indifference
-						1 : [135, 135], // check result
+						1 : [136, 136], 
+					},
+					0.05 : { // indifference
+						1 : [157, 157], 
+					},
+					0.025 : { // indifference
+						1 : [178, 178], 
+					},
+					0.01 : { // indifference
+						1 : [206, 206],
 					}
 				}
 			}
