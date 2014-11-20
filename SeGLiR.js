@@ -1912,8 +1912,6 @@ var glr = function() {
 		} else {
 			// calculate thresholds
 			console.log("calculating thresholds via simulation")
-			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [50,10], 0.001, 46000, 400000, 6, 1)
-			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [98,14.5], 0.001, 46000, 1500000, 6, 1)
 			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [100,100], 0.001, 46000, 1500000, 6, 1)
 			b0 = thr[0];
 			b1 = thr[1];
@@ -1943,9 +1941,10 @@ var glr = function() {
 	// private functions
 
 	var normal_twosided_alpha = function(b0, b1, indiff, var_val, simulateResult, samples) {
+		// not used, only for testing importance sampling
 		if (!samples) samples = 10000;
 		var alphas = [];
-		var starttime = (new Date()).getTime();
+		//var starttime = (new Date()).getTime();
 		for (var i = 0;i < samples;i++) {
 			var res = simulateResult([0,var_val],[0,var_val],b0,b1);
 			if (res[0] == 'false') {
@@ -1954,13 +1953,13 @@ var glr = function() {
 				alphas.push(0);
 			}
 		}
-		console.log("time:"+( (new Date()).getTime()-starttime ))
-		console.log("mean:"+mean(alphas));
-		console.log("std_err:"+boot_std(alphas,1000));
+		//console.log("time:"+( (new Date()).getTime()-starttime ))
+		//console.log("mean:"+mean(alphas));
+		//console.log("std_err:"+boot_std(alphas,1000));
 		return alphas;
 	}
 
-	var normal_twosided_alpha_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
+	var normal_kv_twosided_alpha_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
 		var alphas = [];
 		var beta = 1; // precision/inverse-variance of the importance sampling distribution
@@ -2017,102 +2016,6 @@ var glr = function() {
 		//var starttime = (new Date()).getTime();
 		for (var i = 0;i < samples;i++) {
 			var z = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
-
-			var finished = false;
-			var S_x = 0;
-			var S_x2 = 0
-			var n = 0;
-			var result = undefined;
-			while (!finished) {
-				n += 1;
-				if (n > 1) {
-					// pull xs from N(0,2*var_val)
-					var sample = jStat.jStat.normal.sample(z,Math.sqrt(2*var_val));
-					S_x += sample;
-					S_x2 += sample*sample;
-					// test on simplified boundaries
-					var L_na = Math.exp( n/2 * Math.log((n*S_x2)/(n*S_x2 - S_x*S_x)) );
-					if (L_na >= b0) {
-						finished = true;
-						result = "false"
-					}
-					if (Math.abs(S_x/n) < indiff) {
-						if (S_x/n > 0) {
-							var L_nb = Math.exp( n/2 * Math.log( (n*(S_x2 - 2*indiff*S_x + n*indiff*indiff)) / (n*S_x2 - S_x*S_x) ))
-						} else {
-							var L_nb = Math.exp( n/2 * Math.log( (n*(S_x2 + 2*indiff*S_x + n*indiff*indiff)) / (n*S_x2 - S_x*S_x) ))
-						}
-						if (L_nb >= b1) {
-							finished = true;
-							result = "true";
-						}
-					}
-				}
-				/*if (n % 10 == 0 && n > 0) {
-					console.log("****");
-					console.log("S_x:"+S_x);
-					console.log("S_x2:"+S_x2);
-					console.log("n:"+n);
-					console.log("L_na:"+L_na);
-					console.log("L_nb:"+L_nb);
-					break;
-				}*/
-			}
-
-			if (result == 'false') {
-				var b2v = 2*beta*var_val;
-				var weight = Math.sqrt(b2v/(n + b2v))*Math.exp( (S_x*S_x)/(4*var_val*(n+b2v)) );
-				alphas.push(1/weight);
-			} else {
-				alphas.push(0);
-			}
-		}
-		//console.log("time:"+( (new Date()).getTime()-starttime ))
-		//console.log("mean:"+mean(alphas));
-		//console.log("std_err:"+boot_std(alphas,1000));
-		return alphas;
-	}
-
-	var normal_uv_twosided_alpha_imp2 = function(b0, b1, indiff, var_val, simulateResult, samples) {
-		if (!samples) samples = 10000;
-		var alphas = [];
-		var beta = 10;
-		var starttime = (new Date()).getTime();
-		for (var i = 0;i < samples;i++) {
-			var mu_1 = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
-			var mu_2 = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
-			var res = simulateResult([mu_1,var_val],[mu_2,var_val],b0,b1);
-			if (res[0] == 'false') {
-				var S_x = res[1];
-				var S_y = res[2];
-				var time = res[5];
-				var bv = beta*var_val;
-				
-				//var weight = (bv/(time+bv))*Math.exp((1/var_val)*((S_x*S_x - 2*S_x*S_y + S_y*S_y)/(2*(time+bv))));
-				var weight = (bv/(time+bv))*Math.exp((1/var_val)*((S_x*S_x + S_y*S_y)/(2*(time+bv))));
-				//var weight = (bv/(time+bv))*Math.exp((1/var_val) * ( -(S_x + S_y)*(S_x + S_y)/(4*time) + (S_x*S_x + S_y*S_y)/(2*(time+bv)) ));
-				
-				//var weight = beta/(2*time + beta)*Math.exp( (S_x*S_x + S_y*S_y)/(time + 0.5*beta) - (S_x + S_y)*(S_x + S_y)/(2*time) );
-				//var weight = Math.sqrt(beta/(time+beta))*Math.exp(time*time* ((S_x-S_y)/(2*time))*((S_x-S_y)/(2*time)) / (2*(time+beta)));
-				alphas.push(1/weight);
-			} else {
-				alphas.push(0);
-			}
-		}
-		console.log("time:"+( (new Date()).getTime()-starttime ))
-		console.log("mean:"+mean(alphas));
-		console.log("std_err:"+boot_std(alphas,1000));
-		return alphas;
-		// TODO : should we include std.dev.?
-	}
-
-	var normal_uv_twosided_alpha_imp3 = function(b0, b1, indiff, var_val, simulateResult, samples) {
-		if (!samples) samples = 10000;
-		var alphas = [];
-		var beta = 1; // precision/inverse-variance of the importance sampling distribution
-		var starttime = (new Date()).getTime();
-		for (var i = 0;i < samples;i++) {
-			var z = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
 			var mu_1 = -z/2;
 			var mu_2 = z/2;
 			var res = simulateResult([mu_1,var_val],[mu_2,var_val],b0,b1);
@@ -2128,17 +2031,17 @@ var glr = function() {
 				alphas.push(0);
 			}
 		}
-		console.log("time:"+( (new Date()).getTime()-starttime ))
-		console.log("mean:"+mean(alphas));
-		console.log("std_err:"+boot_std(alphas,1000));
+		//console.log("time:"+( (new Date()).getTime()-starttime ))
+		//console.log("mean:"+mean(alphas));
+		//console.log("std_err:"+boot_std(alphas,1000));
 		return alphas;
-		// TODO : should we include std.dev.?
 	}
 
 	var normal_twosided_beta = function(b0, b1, indiff, var_val, simulateResult, samples) {
+		// not used, kept for checking importance sampling
 		if (!samples) samples = 10000;
 		var betas = [];
-		var starttime = (new Date()).getTime();
+		//var starttime = (new Date()).getTime();
 		for (var i = 0;i < samples;i++) {
 			var res = simulateResult([-indiff/2,var_val],[indiff/2,var_val],b0,b1);
 			if (res[0] == 'true') {
@@ -2147,13 +2050,13 @@ var glr = function() {
 				betas.push(0);
 			}
 		}
-		console.log("time:"+( (new Date()).getTime()-starttime ))
-		console.log("mean:"+mean(betas));
-		console.log("std_err:"+boot_std(betas,1000));
+		//console.log("time:"+( (new Date()).getTime()-starttime ))
+		//console.log("mean:"+mean(betas));
+		//console.log("std_err:"+boot_std(betas,1000));
 		return betas;
 	}
 
-	var normal_twosided_beta_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
+	var normal_kv_twosided_beta_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
 		var betas = [];
 		//var starttime = (new Date()).getTime();
@@ -2200,10 +2103,10 @@ var glr = function() {
 		return betas;
 	}
 
-	var normal_uv_twosided_beta_imp2 = function(b0, b1, indiff, var_val, simulateResult, samples) {
+	var normal_uv_twosided_beta_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
 		var betas = [];
-		var starttime = (new Date()).getTime();
+		//var starttime = (new Date()).getTime();
 		for (var i = 0;i < samples;i++) {	
 			var res = simulateResult([0,var_val],[0,var_val],b0,b1);
 			if (res[0] == 'true') {
@@ -2217,11 +2120,10 @@ var glr = function() {
 				betas.push(0);
 			}
 		}
-		console.log("time:"+( (new Date()).getTime()-starttime ))
-		console.log("mean:"+mean(betas));
-		console.log("std_err:"+boot_std(betas,1000));
+		//console.log("time:"+( (new Date()).getTime()-starttime ))
+		//console.log("mean:"+mean(betas));
+		//console.log("std_err:"+boot_std(betas,1000));
 		return betas;
-		// TODO : should we include std.dev.?
 	}
 
 	var normal_uv_twosided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff) {
@@ -2278,8 +2180,9 @@ var glr = function() {
 	}
 
 	var normal_onesided_alpha = function(b0, b1, indiff, var_val, simulateResult, samples) {
+		// not used, kept for checking importance sampling
 		if (!samples) samples = 10000;
-		var starttime = (new Date()).getTime();
+		//var starttime = (new Date()).getTime();
 		var alphas = [];
 		for (var i = 0;i < samples;i++) {
 			var res = simulateResult([0-indiff/2,var_val],[0+indiff/2,var_val],b0,b1);
@@ -2289,13 +2192,13 @@ var glr = function() {
 				alphas.push(0);
 			}
 		}
-		console.log("time:"+( (new Date()).getTime()-starttime ))
-		console.log("mean:"+mean(alphas));
-		console.log("std_err:"+boot_std(alphas,1000));
+		//console.log("time:"+( (new Date()).getTime()-starttime ))
+		//console.log("mean:"+mean(alphas));
+		//console.log("std_err:"+boot_std(alphas,1000));
 		return alphas;
 	}
 
-	var normal_onesided_alpha_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
+	var normal_kv_onesided_alpha_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
 		var alphas = [];
 		var beta = 1; // precision/inverse-variance of the importance sampling distribution
@@ -2354,7 +2257,7 @@ var glr = function() {
 
 	var normal_uv_onesided_alpha_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
-		var starttime = (new Date()).getTime();
+		//var starttime = (new Date()).getTime();
 		var alphas = [];
 		var beta = 1;
 		for (var i = 0;i < samples;i++) {
@@ -2376,18 +2279,19 @@ var glr = function() {
 				alphas.push(0);
 			}
 		}
-		console.log("time:"+( (new Date()).getTime()-starttime ))
-		var mn = mean(alphas);
-		console.log("mean:"+mean(alphas));
-		console.log("est std_err:"+Math.sqrt( mn*(1-mn)/samples ))
+		//console.log("time:"+( (new Date()).getTime()-starttime ))
+		//var mn = mean(alphas);
+		//console.log("mean:"+mean(alphas));
+		//console.log("est std_err:"+Math.sqrt( mn*(1-mn)/samples ))
 		//console.log("boot std_err:"+boot_std(alphas,1000));
 		return alphas;
 	}
 
 	var normal_onesided_beta = function(b0, b1, indiff, var_val, simulateResult, samples) {
+		// not used, only kept for checking importance sampling
 		if (!samples) samples = 10000;
 		var betas = [];
-		var starttime = (new Date()).getTime();
+		//var starttime = (new Date()).getTime();
 		for (var i = 0;i < samples;i++) {
 			var res = simulateResult([0+indiff/2,var_val],[0-indiff/2,var_val],b0,b1);
 			if (res[0] == 'true') {
@@ -2396,13 +2300,13 @@ var glr = function() {
 				betas.push(0);
 			}
 		}
-		console.log("time:"+( (new Date()).getTime()-starttime ))
-		console.log("mean:"+mean(betas));
-		console.log("std_err:"+boot_std(betas,1000));
+		//console.log("time:"+( (new Date()).getTime()-starttime ))
+		//console.log("mean:"+mean(betas));
+		//console.log("std_err:"+boot_std(betas,1000));
 		return betas;
 	}
 
-	var normal_onesided_beta_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
+	var normal_kv_onesided_beta_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
 		var betas = [];
 		var beta = 1; // precision/inverse-variance of the importance sampling distribution
@@ -2461,7 +2365,7 @@ var glr = function() {
 
 	var normal_uv_onesided_beta_imp = function(b0, b1, indiff, var_val, simulateResult, samples) {
 		if (!samples) samples = 10000;
-		var starttime = (new Date()).getTime();
+		//var starttime = (new Date()).getTime();
 		var betas = [];
 		var beta = 1;
 		for (var i = 0;i < samples;i++) {
@@ -2483,9 +2387,9 @@ var glr = function() {
 				betas.push(0);
 			}
 		}
-		console.log("time:"+( (new Date()).getTime()-starttime ))
-		console.log("mean:"+mean(betas));
-		console.log("std_err:"+boot_std(betas,1000));
+		//console.log("time:"+( (new Date()).getTime()-starttime ))
+		//console.log("mean:"+mean(betas));
+		//console.log("std_err:"+boot_std(betas,1000));
 		return betas;
 	}
 
@@ -2614,18 +2518,14 @@ var glr = function() {
 		'two-sided' : {
 			'l_an' : normal_uv_twosided_LR_H0,
 			'l_bn' : normal_uv_twosided_LR_HA,
-			//'alpha' : normal_twosided_alpha,
-			'alpha' : normal_uv_twosided_alpha_imp3,
-			//'beta' : normal_twosided_beta,
-			'beta' : normal_uv_twosided_beta_imp2,
+			'alpha' : normal_uv_twosided_alpha_imp,
+			'beta' : normal_uv_twosided_beta_imp,
 			'simulateH0' : normal_twosided_simulateH0,
 		},
 		'one-sided' : {
 			'l_an' : normal_uv_onesided_LR_H0,
 			'l_bn' : normal_uv_onesided_LR_HA,
-			//'alpha' : normal_onesided_alpha,
 			'alpha' : normal_uv_onesided_alpha_imp,
-			//'beta' : normal_onesided_beta,
 			'beta' : normal_uv_onesided_beta_imp,
 			'simulateH0' : normal_onesided_simulateH0,	
 		}
@@ -2634,15 +2534,15 @@ var glr = function() {
 		'two-sided' : {
 			'l_an' : normal_kv_twosided_LR_H0,
 			'l_bn' : normal_kv_twosided_LR_HA,
-			'alpha' : normal_twosided_alpha_imp,
-			'beta' : normal_twosided_beta_imp,
+			'alpha' : normal_kv_twosided_alpha_imp,
+			'beta' : normal_kv_twosided_beta_imp,
 			'simulateH0' : normal_twosided_simulateH0,
 		},
 		'one-sided' : {
 			'l_an' : normal_kv_onesided_LR_H0,
 			'l_bn' : normal_kv_onesided_LR_HA,
-			'alpha' : normal_onesided_alpha_imp,
-			'beta' : normal_onesided_beta_imp,
+			'alpha' : normal_kv_onesided_alpha_imp,
+			'beta' : normal_kv_onesided_beta_imp,
 			'simulateH0' : normal_onesided_simulateH0,	
 		}
 	}
