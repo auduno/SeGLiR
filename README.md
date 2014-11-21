@@ -3,9 +3,9 @@ SeGLiR
 
 **SeGLiR** is a javascript library for rapid A/B-testing with **Sequential Generalized Likelihood Ratio Tests**.
 
-Sequential GLR tests are a family of [sequential hypothesis tests](http://en.wikipedia.org/wiki/Sequential_analysis), i.e. tests that stop as soon as a significant result has been detected. Compared to classical fixed samplesize tests, sequential GLR tests may give a significant decrease in the needed samplesize, while keeping the same type-1 and type-2 error guarantees. Below is a comparison of the expected samplesize for fixed samplesize and sequential GLR tests at the same levels. For a more detailed explanation of this family of tests (as well as the graph below), see [the reference](http://auduno.github.io/seglir/documentation.html#math).
+Sequential GLR tests are a family of [sequential hypothesis tests](http://en.wikipedia.org/wiki/Sequential_analysis), i.e. tests that stop as soon as a significant result has been detected. Compared to classical fixed samplesize tests, sequential GLR tests may give a significant decrease in the needed samplesize, while keeping the same type-1 and type-2 error guarantees. Below is a comparison of the expected samplesize for fixed samplesize and sequential GLR tests at the same levels. For a more detailed explanation of this family of tests (as well as the graph below), see [the reference](http://auduno.github.io/SeGLiR/documentation/reference.html).
 
-![Expected samplesize comparison](https://dl.dropboxusercontent.com/u/10557805/samplesize2b.png)
+![Expected samplesize comparison](http://auduno.github.io/SeGLiR/images/samplesize2b.png)
 
 SeGLiR currently contain these tests:
 * comparing two bernoulli proportions (for instance for comparing conversion on a website)
@@ -42,7 +42,7 @@ test.getResults()
 test.estimate()
 ```
 
-For a complete function reference, see the [reference](http://auduno.github.io/seglir/documentation.html).
+For a complete function reference, see the [reference](http://auduno.github.io/SeGLiR/documentation/reference.html#usage).
 
 ### Building from source ###
 
