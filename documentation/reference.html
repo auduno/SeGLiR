@@ -48,7 +48,7 @@
 
 <h2 id="math">Mathematical details</h2>
 
-<p>Mathematically, we have one or more random variables $X$ with a distribution dependent on some (possible multivariate) parameter $\theta$. We also have two hypotheses $H_0 : \theta \in \Theta_0$ and $H_A : \theta \in \Theta_A$ and want to find out which is most likely based on samples we collect, while keeping some guarantees on how many Type-1 or Type-2 errors we can expect to make. A Sequential GLR test will stop as soon as:</p>
+<p>Mathematically, we have one or more random variables $X$ with a distribution dependent on some (possible multivariate) parameter $\theta$. We also have two hypotheses $H_0 : \theta \in \Theta_0$ and $H_A : \theta \in \Theta_A$ and want to decide which is most likely based on data we collect, while keeping some guarantees on how many Type-1 or Type-2 errors we can expect to make. A Sequential GLR test will stop as soon as:</p>
 
 <!--<p>\begin{aligned}
 L_{na} \geq b_0 \;\mathrm{or}\; L_{nb} \geq b_1
@@ -360,7 +360,8 @@ If this function returns the strings "true" or "false", the test has finished. "
 <p>Precalculated thresholds:</p>
 
 <ul>
-  <li>Two-sided:</li>
+  <li>Two-sided: $\alpha$-level 0.05, $\beta$-level 0.10, indifference region of size 0.1, 0.05, 0.025, 0.01.</li>
+  <li>One-sided: $\alpha$-level 0.05, $\beta$-level 0.05, indifference region of size 0.1, 0.05, 0.025, 0.01.</li>
 </ul>
 
 <p>A simple example:</p>
@@ -415,7 +416,8 @@ test.estimate(); // returns [0, 1, -1]
 <p>Precalculated thresholds:</p>
 
 <ul>
-  <li>Two-sided:</li>
+  <li>Two-sided: $\alpha$-level 0.05, $\beta$-level 0.10, indifference region of size 0.1, 0.05, 0.025, 0.01, at either variance 1 or variance-bound 1.</li>
+  <li>One-sided: $\alpha$-level 0.05, $\beta$-level 0.05, indifference region of size 0.1, 0.05, 0.025, 0.01, at either variance 1 or variance-bound 1.</li>
 </ul>
 
 <p>A simple example:</p>
@@ -439,7 +441,7 @@ test.estimate() // returns [4.1673, 7.9274, -3.7601]
 
 <h2>Best arm selection with bernoulli arms</h2>
 
-<p>In these tests we assume that we have two random variables, $X$ and $Y$, where $X$ is bernoulli distributed with unknown parameter $p_1$ and $Y$ is bernoulli distributed with unknown parameter $p_2$, and we want to find which variable has the highest value of $\p_.$.</p>
+<p>In these tests we assume that we have two random variables, $X$ and $Y$, where $X$ is bernoulli distributed with unknown parameter $p_1$ and $Y$ is bernoulli distributed with unknown parameter $p_2$, and we want to find which variable has the highest value of $p$.</p>
 
 <p>Test instantiation:</p>
 
