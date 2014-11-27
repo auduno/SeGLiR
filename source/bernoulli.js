@@ -50,7 +50,6 @@
 		}
 
 		// get p-value (only when test is done)
-		// this needs to be exchanged
 		this.pValue = function(samples) {
 			if (!finished) {
 				return undefined;
@@ -110,7 +109,7 @@
 		}
 
 		// get estimate (only when test is done)
-		  // use bias-reduction
+		// use bias-reduction
 		this.estimate = function() {
 			if (!finished) {
 				return undefined;
@@ -175,18 +174,6 @@
 		}
 
 		// get expected samplesize for some parameters
-		/*this.expectedSamplesize = function(p1, p2, samples) {
-			// simulate it enough times
-			if (!samples) samples = 10000;
-			console.log("calculating expected samplesize via simulation");
-			var times = [];
-			for (var i = 0;i < samples;i++) {
-				var res = simulateResult(p1,p2,b0,b1)
-				times.push(res[3]);
-			}
-			return mean(times);
-		}*/
-
 		this.expectedSamplesize = function(p1, p2, samples) {
 			// simulate it enough times
 			if (!samples) samples = 10000;
@@ -196,8 +183,7 @@
 				var res = simulateResult(p1,p2,b0,b1)
 				times.push(res[3]);
 			}
-			times.sort(function(a,b){return a-b});
-			return [times[samples*0.05], mean(times), times[samples*0.95]];
+			return mean(times);
 		}
 
 		/** private functions **/
@@ -220,7 +206,7 @@
 		var checkTest = function(S_x, S_y, n, d, b0, b1) {
 			// check if test should be stopped
 			
-			// TODO : should I check for when both L_an and L_bn pass thresholds?
+			// TODO : should I check for cases when both L_an and L_bn pass thresholds?
 
 			var L_an = LikH0(S_x, S_y, n, d);
 			if (L_an >= b0) {
@@ -284,7 +270,8 @@
 			b1 = thresholds['bernoulli'][sides][alpha_value][beta_value][indifference][1];
 		} else {
 			// calculate thresholds
-			console.log("calculating thresholds via simulation")
+			console.log("Calculating thresholds via simulation.")
+			console.log("Please note : Calculating thresholds via simulation might take a long time. To save time, consult the SeGLiR reference to find test settings that already have precalculated thresholds.")
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [50,10], 0.001, 46000, 400000, 6, 1)
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [98,14.5], 0.001, 46000, 1500000, 6, 1)
 			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [90,90], 0.001, 46000, 1500000, 6, 1)
@@ -724,7 +711,6 @@
 			}
 		}
 		return alphas;
-		// TODO : should we include std.dev.?
 	}
 
 	var bernoulli_twosided_beta = function(b0, b1, indiff, simulateResult, samples) {
@@ -739,7 +725,6 @@
 			}
 		}
 		return betas;
-		// TODO : should we include std.dev.?
 	}
 
 	var bernoulli_twosided_LR_H0 = function(S_x, S_y, n, indiff) {
@@ -796,7 +781,7 @@
 				var S_y = Math.floor(0.5*i);
 				var j = 0;
 				while (S_y <= i && S_x >= 0) {
-					if (twosided_LR_H0(S_x, S_y, i) >= b0) {
+					if (bernoulli_twosided_LR_H0(S_x, S_y, i) >= b0) {
 						L_na_thresholds[i] = Math.abs(S_x/i - S_y/i);
 						break;
 					}
@@ -809,7 +794,7 @@
 				var S_y = i;
 				var j = 0;
 				while (S_y >= Math.floor(0.5*i) && S_x <= Math.floor(0.5*i)) {
-					if (twosided_LR_HA(S_x, S_y, i, indiff) >= b1) {
+					if (bernoulli_twosided_LR_HA(S_x, S_y, i, indiff) >= b1) {
 						L_nb_thresholds[i] = Math.abs(S_x/i - S_y/i);
 						break;
 					}
@@ -911,7 +896,6 @@
 			}
 		}
 		return alphas;
-		// TODO : should we include std.dev.?
 	}
 
 	var bernoulli_onesided_beta = function(b0, b1, indiff, simulateResult, samples) {
@@ -927,7 +911,6 @@
 			}
 		}
 		return betas;
-		// TODO : should we include std.dev.?
 	}
 
 	var bernoulli_onesided_maxSamplesize = function(b0, b1, indiff) {

@@ -334,6 +334,7 @@
 		} else {
 			// calculate thresholds
 			console.log("calculating thresholds via simulation")
+			console.log("Please note : Calculating thresholds via simulation might take a long time. To save time, consult the SeGLiR reference to find test settings that already have precalculated thresholds.")
 			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [100,100], 0.001, 46000, 1500000, 6, 1)
 			b0 = thr[0];
 			b1 = thr[1];
@@ -863,12 +864,7 @@
 	}
 
 	var normal_kv_twosided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff, var_value) {
-		var mle_mean = (S_x + S_y)/(2*n);
-		var mle_x = S_x/n;
-		var mle_y = S_y/n;
-
-		var likRatio = Math.exp(n/(2*var_value) * (0.5*mle_x*mle_x + 0.5*mle_y*mle_y - mle_x*mle_y));
-		//var likRatio2 = Math.exp((S_x-S_y)*(S_x-S_y)/(4*n*var_value));
+		var likRatio2 = Math.exp((S_x-S_y)*(S_x-S_y)/(4*n*var_value));
 
 		return likRatio;
 	}
@@ -889,12 +885,8 @@
 
 		var mle_lik_part = S_x2 - n*unc_mle_x*unc_mle_x + S_y2 - n*unc_mle_y*unc_mle_y;
 		if (pos_lik_part < neg_lik_part) {
-			//console.log("regular pos likratio : "+Math.exp( 1/(2*var_value)*(pos_lik_part - mle_lik_part) ) );
-			//console.log("simple pos likratio : "+Math.exp( (S_x-S_y-n*indiff)*(S_x-S_y-n*indiff)/(4*n*var_value) ) );
 			return Math.exp( 1/(2*var_value)*(pos_lik_part - mle_lik_part) );
 		} else {
-			//console.log("regular neg likratio : "+Math.exp( 1/(2*var_value)*(neg_lik_part - mle_lik_part) ) );
-			//console.log("simple neg likratio : "+Math.exp( (S_x-S_y+n*indiff)*(S_x-S_y+n*indiff)/(4*n*var_value) ) );
 			return Math.exp( 1/(2*var_value)*(neg_lik_part - mle_lik_part) );
 		}
 	}
