@@ -302,7 +302,7 @@ L_{na} \geq b_0 \;\mathrm{or}\; L_{nb} \geq b_1
 <pre><code>var test = glr.test(<em>type</em>, <em>sides</em>, <em>indifference_size</em>, <em>alpha</em>, <em>beta</em>);
 </code></pre>
 
-<p>where <em>type</em> is the type of the test (for instance "bernoulli"), <em>sides</em> is "two-sided" or "one-sided", <em>indifference_size</em> is the size of the indifference region, <em>alpha</em> is the desired type-1 error, and <em>beta</em> is the desired type-2 error. These parameters may vary depending on the type of test, so check documentation for the test type below. Note that in a lot of cases, calculating the thresholds $b_0$ and $b_1$ in order to get the wanted $\alpha$- and $\beta$-level may take a long time, so it's an advantage to select alpha and beta values where the thresholds are precalculated, see this under the specific test. If the precalculated thresholds are not available for the wanted combination of $\delta$, $\alpha$- and $\beta$-level, SeGLiR will calculate these thresholds by simulation when instantiating the test.</p>
+<p>where <em>type</em> is the type of the test (for instance "bernoulli"), <em>sides</em> is "two-sided" or "one-sided", <em>indifference_size</em> is the size of the indifference region, <em>alpha</em> is the desired type-1 error, and <em>beta</em> is the desired type-2 error. These parameters may vary depending on the type of test, so check documentation for the test type below. Note that in a lot of cases, calculating the thresholds $b_0$ and $b_1$ in order to get the wanted $\alpha$- and $\beta$-level may take a long time, so it's an advantage to select alpha and beta values where the thresholds are precalculated, see this under the specific test. If the precalculated thresholds are not available for the wanted combination of $\delta$, $\alpha$- and $\beta$-level, SeGLiR will try to calculate these thresholds by simulation when instantiating the test. If the simulation fails to converge, it might be necessary to find the thresholds manually with the functions <em>alpha_level()</em> and <em>beta_level()</em>.</p>
 
 <p>From the returned instance of the test, you can add samples via the function <em>addData()</em>:
 
@@ -333,11 +333,12 @@ If this function returns the strings "true" or "false", the test has finished. "
 <p>Test instantiation:</p>
 
 <ul>
-<li><em>seglir.</em><strong>test(</strong>"bernoulli", <em>sides</em>, <em>indifference</em>, <em>alpha</em>, <em>beta</em><strong>)</strong><ul>
+<li><em>seglir.</em><strong>test(</strong>"bernoulli", <em>sides</em>, <em>indifference</em>, <em>alpha</em>, <em>beta</em>, <em>simulateThreshold</em><strong>)</strong><ul>
     <li><em>sides</em> : "one-sided" or "two-sided"</li>
     <li><em>indifference</em> : the value of $\delta$, i.e. the size of the indifference region</li>
     <li><em>alpha</em> : the wanted level of type-1 errors</li>
     <li><em>beta</em> : the wanted level of type-2 errors</li>
+    <li><em>simulateThreshold</em> : whether to calculate thresholds by simulation. When manually calculating thresholds, this can be set to <em>false</em>.</li>
   </ul>
 </li>
 </ul>
@@ -348,12 +349,14 @@ If this function returns the strings "true" or "false", the test has finished. "
 <li><em><strong>getResults()</strong></em> : returns an object with sufficient statistics, likelihood ratio statistics, as well as information on whether the test is done.</li>
 <li><em><strong>pValue()</strong></em> : if the test is done, this will simulate the p-value.</li>
 <li><em><strong>confInterval()</strong></em> : if the test is done, this returns a bootstrap confidence interval of the difference between $p_1$ and $p_2$.</li>
-<li><em><strong>estimate()</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $p_1$, $p_2$ and $p_1 - p_2$ respectively.</li>
+<li><em><strong>estimate(</strong>max_samples<strong>)</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $p_1$, $p_2$ and $p_1 - p_2$ respectively. <em>max_samples</em> is an optional parameter for setting max number of simulations used in estimation.</li>
 <li><em><strong>getData()</strong></em> : returns two arrays with the sequences of samples of $X$ and $Y$ collected so far.</li>
 <li><em><strong>addData(</strong>{x : 1, y : 1}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"true"</em> ($H_A$ was rejected) or <em>"false"</em> ($H_0$ was rejected) as a string. Note that after the test is finished, the instance will still store new samples added, but test statistics and conclusion will not be updated. All stored samples collected can be retrieved via <em>getData()</em>.</li>
 <li><em><strong>expectedSamplesize(</strong>p1, p2<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true parameters $p_1$ and $p_2$.</li>
 <li><em><strong>maxSamplesize()</strong></em> : returns the worst-case maximum samplesize of this test.</li>
 <li><em><strong>properties()</strong></em> : returns an object with properties of this test that were specified on initialization, such as <em>type</em>, <em>sides</em>, <em>indifference size</em>, <em>alpha</em> and <em>beta</em>.</li>
+<li><em><strong>alpha_level(</strong>b0, b1, samples<strong>)</strong></em> : simulate the alpha level for the given thresholds $b_0$ and $b_1$. Returns the mean and bootstrapped standard error of the simulated alpha level.</li>
+<li><em><strong>beta_level(</strong>b0, b1, samples<strong>)</strong></em> : simulate the beta level for the given thresholds $b_0$ and $b_1$. Returns the mean and bootstrapped standard error of the simulated alpha level.</li>
 </ul>
 
 <p>Precalculated thresholds:</p>
@@ -388,13 +391,14 @@ test.estimate(); // returns [0, 1, -1]
 <p>Test instantiation:</p>
 
 <ul>
-<li><em>seglir.</em><strong>test(</strong>"normal", <em>sides</em>, <em>indifference</em>, <em>alpha</em>, <em>beta</em>, <em>variance</em>, <em>variance_bound</em><strong>)</strong><ul>
+<li><em>seglir.</em><strong>test(</strong>"normal", <em>sides</em>, <em>indifference</em>, <em>alpha</em>, <em>beta</em>, <em>variance</em>, <em>variance_bound</em>, <em>simulateThreshold</em><strong>)</strong><ul>
     <li><em>sides</em> : "one-sided" or "two-sided"</li>
     <li><em>indifference</em> : the value of $\delta$, i.e. the size of the indifference region</li>
     <li><em>alpha</em> : the wanted level of type-1 errors</li>
     <li><em>beta</em> : the wanted level of type-2 errors</li>
     <li><em>variance</em> : the variance of X and Y, if it is known, <em>undefined</em> otherwise.</li>
     <li><em>variance_bound</em> : if <em>variance</em> is undefined, i.e. the variance is unknown, some upper bound on the variance must be specified.</li>
+    <li><em>simulateThreshold</em> : whether to calculate thresholds by simulation. When manually calculating thresholds, this can be set to <em>false</em>.</li>
   </ul>
 </li>
 </ul>
@@ -405,11 +409,13 @@ test.estimate(); // returns [0, 1, -1]
 <li><em><strong>getResults()</strong></em> : returns an object with sufficient statistics, likelihood ratio statistics, as well as information on whether the test is done.</li>
 <li><em><strong>pValue()</strong></em> : if the test is done, this simulates the p-value.</li>
 <li><em><strong>confInterval()</strong></em> : if the test is done, this returns a bootstrap confidence interval of the difference between $\mu_1$ and $\mu_2$.</li>
-<li><em><strong>estimate()</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $\mu_1$, $\mu_2$ and $\mu_1 - \mu_2$ respectively.</li>
+<li><em><strong>estimate(</strong>max_samples<strong>)</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $\mu_1$, $\mu_2$ and $\mu_1 - \mu_2$ respectively. <em>max_samples</em> is an optional parameter for setting max number of simulations used in estimation.</li>
 <li><em><strong>getData()</strong></em> : returns two arrays with the sequences of samples of $X$ and $Y$ collected so far.</li>
 <li><em><strong>addData(</strong>{x : 9.2, y : 8.5}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"true"</em> ($H_A$ was rejected) or <em>"false"</em> ($H_0$ was rejected) as a string. Note that after the test is finished, the instance will still store new data points added internally, but test statistics and conclusion will not be updated. All stored data points collected can be retrieved via <em>getData()</em>.</li>
 <li><em><strong>expectedSamplesize(</strong>mu1, mu2<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true parameters $\mu_1$ and $\mu_2$.</li>
 <li><em><strong>properties()</strong></em> : returns an object with properties of this test that were specified on initialization, i.e. <em>type</em>, <em>sides</em>, <em>indifference size</em>, <em>alpha</em>, <em>beta</em>, <em>variance</em> and <em>variance_bound</em>.</li>
+<li><em><strong>alpha_level(</strong>b0, b1, samples<strong>)</strong></em> : simulate the alpha level for the given thresholds $b_0$ and $b_1$. Returns the mean and bootstrapped standard error of the simulated alpha level.</li>
+<li><em><strong>beta_level(</strong>b0, b1, samples<strong>)</strong></em> : simulate the beta level for the given thresholds $b_0$ and $b_1$. Returns the mean and bootstrapped standard error of the simulated alpha level.</li>
 </ul>
 
 <p>Precalculated thresholds:</p>
@@ -456,7 +462,7 @@ test.estimate() // returns [4.1673, 7.9274, -3.7601]
 <ul>
 <li><em><strong>getResults()</strong></em> : returns an object with sufficient statistics, likelihood ratio statistics, as well as information on whether the test is done.</li>
 <li><em><strong>confInterval()</strong></em> : if the test is done, this returns a bootstrap confidence interval of the difference between $p_1$ and $p_2$.</li>
-<li><em><strong>estimate()</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $p_1$, $p_2$ and $p_1 - p_2$ respectively.</li>
+<li><em><strong>estimate(</strong>max_samples<strong>)</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $p_1$, $p_2$ and $p_1 - p_2$ respectively. <em>max_samples</em> is an optional parameter for setting max number of simulations used in estimation.</li>
 <li><em><strong>getData()</strong></em> : returns two arrays with the sequences of samples of $X$ and $Y$ collected so far.</li>
 <li><em><strong>addData(</strong>{x : 1, y : 1}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"X"</em> (i.e. $p_1 > p_2$) or <em>"Y"</em> ($p_2 > p_1$) as a string. Note that after the test is finished, the instance will still store new sampels added, but test statistics and conclusion will not be updated. All stored samples collected can be retrieved via <em>getData()</em>.</li>
 <li><em><strong>expectedSamplesize(</strong>p1, p2<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true parameters $p_1$ and $p_2$.</li>
@@ -494,7 +500,7 @@ test.estimate(); // returns [0, 1, -1]
 <ul>
 <li><em><strong>getResults()</strong></em> : returns an object with sufficient statistics, likelihood ratio statistics, as well as information on whether the test is done.</li>
 <li><em><strong>confInterval()</strong></em> : if the test is done, this returns a bootstrap confidence interval of the difference between $\mu_1$ and $\mu_2$.</li>
-<li><em><strong>estimate()</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $\mu_1$, $\mu_2$ and $\mu_1 - \mu_2$ respectively.</li>
+<li><em><strong>estimate(</strong>max_samples<strong>)</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $\mu_1$, $\mu_2$ and $\mu_1 - \mu_2$ respectively. <em>max_samples</em> is an optional parameter for setting max number of simulations used in estimation.</li>
 <li><em><strong>getData()</strong></em> : returns two arrays with the sequences of samples of $X$ and $Y$ collected so far.</li>
 <li><em><strong>addData(</strong>{x : 2.3, y : 9.8}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"X"</em> (i.e. $\mu_1 > \mu_2$) or <em>"Y"</em> ($\mu_2 > \mu_1$) as a string. Note that after the test is finished, the instance will still store new data points added internally, but test statistics and conclusion will not be updated. All stored data points collected can be retrieved via <em>getData()</em>.</li>
 <li><em><strong>expectedSamplesize(</strong>mu_1, mu_2<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true parameters $\mu_1$ and $\mu_2$.</li>
