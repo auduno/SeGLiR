@@ -1,7 +1,7 @@
 	
 	/*** test for comparing normal means, unknown or known variance ***/
 
-	var normal_test = function(sides, indifference, type1_error, type2_error, variance, variance_bound) {
+	var normal_test = function(sides, indifference, type1_error, type2_error, variance, variance_bound, simulateThreshold) {
 
 		var b0, b1, stoppingTime, var_bound, var_value;
 
@@ -31,6 +31,9 @@
 			console.log("when parameter 'variance' is specified, it must be a valid variance, i.e. number above 0, input was : "+variance);
 			return;
 		}
+		if (typeof(simulateThreshold) == "undefined") {
+			simulateThreshold = true;
+		}
 
 		var x_data = [];
 		var y_data = [];
@@ -38,7 +41,6 @@
 		var alpha_value = type1_error;
 		var beta_value = type2_error;
 		var indiff = indifference;
-		var var_bound 
 		if (typeof(variance) == "undefined") {
 			var_bound = variance_bound;
 		} else {
@@ -130,11 +132,14 @@
 
 		// get estimate (only when test is done)
 		  // use bias-reduction
-		this.estimate = function() {
+		this.estimate = function(max_samples) {
 			if (!finished) {
 				return undefined;
 			}
-			var ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, 590000, 0.02, undefined, undefined, false);
+			if (typeof(max_samples) == "undefined") {
+				max_samples = 1500000;
+			}
+			var ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, max_samples, 0.02, undefined, undefined, true);
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}
@@ -145,6 +150,10 @@
 		
 		// add single or paired datapoint (control or treatment)
 		this.addData = function(points) {
+			if (!simulateThreshold) {
+				console.log("No thresholds are defined, this mode is only for manually finding thresholds.")
+				return;
+			}
 			if (finished) {
 				if (typeof points['x'] === 'number') x_data.push(points['x']);
 				if (typeof points['y'] === 'number') y_data.push(points['y']);
@@ -203,6 +212,10 @@
 
 		// get expected samplesize for some parameters
 		this.expectedSamplesize = function(params_1, params_2, samples) {
+			if (!simulateThreshold) {
+				console.log("No thresholds are defined, this mode is only for manually finding thresholds.")
+				return;
+			}
 			// simulate it enough times
 			if (!samples) samples = 10000;
 			console.log("calculating expected samplesize via simulation");
@@ -245,7 +258,6 @@
 			// return result, S_x, S_y, stoppingTime
 			return [result[0], S_x, S_y, S_x2, S_y2, time, result[1]];
 		}
-		this.simulateResult = simulateResult;
 
 		var checkTest = function(S_x, S_y, S_x2, S_y2, n, d, b0, b1) {
 			// check if test should be stopped
@@ -290,8 +302,6 @@
 			var LikH0 = functions['normal_uv'][sides]['l_an'];
 			var LikHA = functions['normal_uv'][sides]['l_bn'];
 		}
-		this.LikH0 = LikH0;
-		this.LikHA = LikHA;
 
 		var boundaryFun = function(indiff) {
 			// simulate alpha and beta-value
@@ -315,8 +325,28 @@
 			var alpha = functions['normal_uv'][sides]['alpha'];
 			var beta = functions['normal_uv'][sides]['beta'];
 		}
-		this.alpha = alpha;
-		this.beta = beta;
+
+		this.alpha_level = function(b0,b1,samples) {
+			if (typeof(var_bound) == "undefined") {
+				var alphas = alpha(b0, b1, indiff, var_value, simulateResult, samples);
+			} else {
+				var alphas = alpha(b0, b1, indiff, var_bound, simulateResult, samples);
+			}
+			var mn = mean(alphas);
+			var sderr = boot_std(alphas,1000)
+			return [mn,sderr];
+		}
+
+		this.beta_level = function(b0,b1,samples) {
+			if (typeof(var_bound) == "undefined") {
+				var betas = beta(b0, b1, indiff, var_value, simulateResult, samples);
+			} else {
+				var betas = beta(b0, b1, indiff, var_bound, simulateResult, samples);
+			}
+			var mn = mean(betas);
+			var sderr = boot_std(betas,1000)
+			return [mn,sderr];	
+		}
 
 		// initialization:
 		  // calculate thresholds (unless they are stored in table)
@@ -331,13 +361,15 @@
 		if (sides in our_thresholds && alpha_value in our_thresholds[sides] && beta_value in our_thresholds[sides][alpha_value] && indifference in our_thresholds[sides][alpha_value][beta_value] && our_var in our_thresholds[sides][alpha_value][beta_value][indifference]) {
 			b0 = our_thresholds[sides][alpha_value][beta_value][indifference][our_var][0];
 			b1 = our_thresholds[sides][alpha_value][beta_value][indifference][our_var][1];
-		} else {
+		} else if (simulateThreshold) {
 			// calculate thresholds
 			console.log("calculating thresholds via simulation")
 			console.log("Please note : Calculating thresholds via simulation might take a long time. To save time, consult the SeGLiR reference to find test settings that already have precalculated thresholds.")
-			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [100,100], 0.001, 46000, 1500000, 6, 1)
+			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [10,10], 0.001, 46000, 1500000, 6, 1, undefined, true);
 			b0 = thr[0];
 			b1 = thr[1];
+		} else {
+			console.log("NB! No precalculated thresholds are found and simulation of thresholds is disabled - this mode is only for manually finding thresholds for a given alpha- and beta-level.");
 		}
 
 		// TODO : implement this for known variance
@@ -864,7 +896,7 @@
 	}
 
 	var normal_kv_twosided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff, var_value) {
-		var likRatio2 = Math.exp((S_x-S_y)*(S_x-S_y)/(4*n*var_value));
+		var likRatio = Math.exp((S_x-S_y)*(S_x-S_y)/(4*n*var_value));
 
 		return likRatio;
 	}

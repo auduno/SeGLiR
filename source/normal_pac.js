@@ -87,11 +87,14 @@
 
 		// get estimate (only when test is done)
 		  // use bias-reduction
-		this.estimate = function() {
+		this.estimate = function(max_samples) {
 			if (!finished) {
 				return undefined;
 			}
-			var ests = optimize2d([S_x/n_x, S_y/n_y], biasFun(), [S_x/n_x, S_y/n_y], 0.005, 16400, 590000, 0.02, undefined, undefined, false);
+			if (typeof(max_samples) == "undefined") {
+				max_samples = 1500000;
+			}
+			var ests = optimize2d([S_x/n_x, S_y/n_y], biasFun(), [S_x/n_x, S_y/n_y], 0.005, 16400, max_samples, 0.02, undefined, undefined, true);
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}

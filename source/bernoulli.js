@@ -1,7 +1,7 @@
 	
 	/*** test for bernoulli proportions ***/
 
-	var bernoulli_test = function(sides, indifference, type1_error, type2_error) {
+	var bernoulli_test = function(sides, indifference, type1_error, type2_error, simulateThreshold) {
 
 		var b0, b1, stoppingTime;
 
@@ -21,6 +21,9 @@
 		if (typeof(type2_error) != 'number' || type2_error <= 0 || type2_error >= 1) {
 			console.log("parameter 'type2_error' must be a number between 0 and 1, input was : "+type2_error);
 			return;
+		}
+		if (typeof(simulateThreshold) == "undefined") {
+			simulateThreshold = true;
 		}
 
 		var x_data = [];
@@ -110,11 +113,14 @@
 
 		// get estimate (only when test is done)
 		// use bias-reduction
-		this.estimate = function() {
+		this.estimate = function(max_samples) {
 			if (!finished) {
 				return undefined;
 			}
-			var ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, 590000, 0.02, 0, 1, false);
+			if (typeof(max_samples) == "undefined") {
+				max_samples = 1500000;
+			}
+			var ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, max_samples, 0.02, 0, 1, true);
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}
@@ -127,6 +133,10 @@
 		// add single or paired datapoint (control or treatment)
 			// returns true if test is finished
 		this.addData = function(points) {
+			if (!simulateThreshold) {
+				console.log("No thresholds are defined, this mode is only for manually finding thresholds.")
+				return;
+			}
 			if (finished) {
 				if (typeof points['x'] === 'number') x_data.push(points['x']);
 				if (typeof points['y'] === 'number') y_data.push(points['y']);
@@ -175,6 +185,10 @@
 
 		// get expected samplesize for some parameters
 		this.expectedSamplesize = function(p1, p2, samples) {
+			if (!simulateThreshold) {
+				console.log("No thresholds are defined, this mode is only for manually finding thresholds.")
+				return;
+			}
 			// simulate it enough times
 			if (!samples) samples = 10000;
 			console.log("calculating expected samplesize via simulation");
@@ -220,7 +234,6 @@
 		}
 
 		var LikH0 = functions['bernoulli'][sides]['l_an'];
-		this.LikH0 = LikH0;
 		var LikHA = functions['bernoulli'][sides]['l_bn'];
 
 		var boundaryFun = function(indiff) {
@@ -241,9 +254,7 @@
 		
 		var alpha = functions['bernoulli'][sides]['alpha'];
 		var beta = functions['bernoulli'][sides]['beta'];
-		this.beta = beta;
-		this.alpha = alpha;
-		
+				
 		var simulateResult = function(p1, p2, b0, b1) {
 			var finished = false;
 			var time = 0;
@@ -261,22 +272,37 @@
 			// return result, S_x, S_y, stoppingTime
 			return [result[0], S_x, S_y, time, result[1]];
 		}
-		this.simulateResult = simulateResult;
+
+		this.alpha_level = function(b0,b1,samples) {
+			var alphas = alpha(b0, b1, indiff, simulateResult, samples);
+			var mn = mean(alphas);
+			var sderr = boot_std(alphas,1000)
+			return [mn,sderr];
+		}
+
+		this.beta_level = function(b0,b1,samples) {
+			var betas = beta(b0, b1, indiff, simulateResult, samples);
+			var mn = mean(betas);
+			var sderr = boot_std(betas,1000)
+			return [mn,sderr];	
+		}
 
 		// initialization:
 		  // calculate thresholds (unless they are stored in table)
 		if (sides in thresholds['bernoulli'] && alpha_value in thresholds['bernoulli'][sides] && beta_value in thresholds['bernoulli'][sides][alpha_value] && indifference in thresholds['bernoulli'][sides][alpha_value][beta_value]) {
 			b0 = thresholds['bernoulli'][sides][alpha_value][beta_value][indifference][0];
 			b1 = thresholds['bernoulli'][sides][alpha_value][beta_value][indifference][1];
-		} else {
+		} else if (simulateThreshold) {
 			// calculate thresholds
 			console.log("Calculating thresholds via simulation.")
 			console.log("Please note : Calculating thresholds via simulation might take a long time. To save time, consult the SeGLiR reference to find test settings that already have precalculated thresholds.")
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [50,10], 0.001, 46000, 400000, 6, 1)
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [98,14.5], 0.001, 46000, 1500000, 6, 1)
-			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [90,90], 0.001, 46000, 1500000, 6, 1)
+			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [10,10], 0.001, 46000, 1500000, 6, 1, undefined, true, false);
 			b0 = thr[0];
 			b1 = thr[1];
+		} else {
+			console.log("NB! No precalculated thresholds are found and simulation of thresholds is disabled - this mode is only for manually finding thresholds for a given alpha- and beta-level.")
 		}
 
 		this.maxSamplesize = functions['bernoulli'][sides]['max_samplesize'](b0,b1,indiff);
@@ -826,8 +852,9 @@
 			}
 			fs.writeFile("./test.txt",str1+"),\n"+str2+")\n", function(err){});
 			*/
+			//return [maxSample, L_na_thresholds, L_nb_thresholds];
 
-			return [maxSample, L_na_thresholds, L_nb_thresholds];
+			return maxSample;
 		}
 		return returnFunction;
 	}

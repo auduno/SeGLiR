@@ -22,9 +22,12 @@ var glr = function() {
 	/*
 	 * use gradient descent in 2d to find parameters x,y so that fun(x,y) == vec
 	 */
-	var optimize2d = function(vec, fun, init_points, epsilon, nsamples, max_samples, gradient_evaluation_width, lower_limit, upper_limit, verbose) {
+	var optimize2d = function(vec, fun, init_points, epsilon, nsamples, max_samples, gradient_evaluation_width, lower_limit, upper_limit, verbose, debug) {
 		if (typeof(verbose) === 'undefined') {
 			verbose = true;
+		}
+		if (typeof(debug) === 'undefined') {
+			debug = false;
 		}
 
 		// clone variables
@@ -35,7 +38,8 @@ var glr = function() {
 		var samples = 0;
 		var diff = Infinity;
 		var est_point = init_points;
-		if (verbose) console.log(est_point);
+		if (verbose) console.log("Initial estimate : "+est_point);
+		var iteration = 0;
 		while (samples < max_samples && diff > epsilon) {
 			// evaluate at current point
 
@@ -66,8 +70,8 @@ var glr = function() {
 				curval[1] = curval[1].concat(new_curval[1]);
 				
 				curpoints = [mean(curval[0]), mean(curval[1])];
-				if (verbose) console.log("alpha : "+curpoints[0]+" +- "+(4*std(curval[0])/Math.sqrt(curval[0].length)));
-				if (verbose) console.log("beta : "+curpoints[1]+" +- "+(4*std(curval[1])/Math.sqrt(curval[1].length)));
+				if (debug) console.log("alpha : "+curpoints[0]+" +- "+(4*std(curval[0])/Math.sqrt(curval[0].length)));
+				if (debug) console.log("beta : "+curpoints[1]+" +- "+(4*std(curval[1])/Math.sqrt(curval[1].length)));
 
 				// if CI does not contain 0 OR CI is smaller than 2*epsilon, stop
 				var ci_halfwidth_0 = (4*std(curval[0])/Math.sqrt(curval[0].length));
@@ -84,7 +88,7 @@ var glr = function() {
 				}
 				samples += num_samples;
 
-				if (verbose) console.log("checked current estimate, samples:"+samples)
+				if (debug) console.log("checked current estimate, samples:"+samples)
 			}
 			if (diff < epsilon || samples > max_samples) {
 				break;
@@ -109,10 +113,10 @@ var glr = function() {
 				d_samples[0] = d_samples[0].concat(new_d_samples[0]);
 				d_samples[1] = d_samples[1].concat(new_d_samples[1]);
 				
-				if (verbose) console.log("length samples : "+l_samples[0].length);
+				if (debug) console.log("length samples : "+l_samples[0].length);
 
 				samples += num_samples;
-				if (verbose) console.log(samples);
+				if (debug) console.log(samples);
 
 				var l_0_mean = mean(l_samples[0]);
 				var l_1_mean = mean(l_samples[1]);
@@ -126,6 +130,7 @@ var glr = function() {
 				var b1p2_gradient_mean = (u_0_mean-d_0_mean)/gradient_evaluation_width;
 				var b2p1_gradient_mean = (r_1_mean-l_1_mean)/gradient_evaluation_width;
 				var b2p2_gradient_mean = (u_1_mean-d_1_mean)/gradient_evaluation_width;
+
 				//console.log("gradient : "+gradient_mean+" +- "+(4*( (std(l_samples)+std(r_samples))/Math.pow(gradient_evaluation_width,2) )/Math.sqrt(nsamples)));
 				
 				/*console.log("b1p1 gradient : "+b1p1_gradient_mean+" +- "+(4*( (std(r_samples[0])+std(l_samples[0]))/Math.pow(gradient_evaluation_width,2) )/Math.sqrt(nsamples)));
@@ -151,10 +156,10 @@ var glr = function() {
 				var b2p1_var = ( Math.pow(std(r_samples[1]),2)+Math.pow(std(l_samples[1]),2) )/(gradient_evaluation_width*gradient_evaluation_width*r_samples[0].length);
 				var b2p2_var = ( Math.pow(std(u_samples[1]),2)+Math.pow(std(d_samples[1]),2) )/(gradient_evaluation_width*gradient_evaluation_width*r_samples[0].length);
 
-				if (verbose) console.log("b1p1 gradient : "+b1p1_gradient_mean+" +- "+(4*Math.sqrt(b1p1_var)) );
-				if (verbose) console.log("b1p2 gradient : "+b1p2_gradient_mean+" +- "+(4*Math.sqrt(b1p2_var)) );
-				if (verbose) console.log("b2p1 gradient : "+b2p1_gradient_mean+" +- "+(4*Math.sqrt(b2p1_var)) );
-				if (verbose) console.log("b2p2 gradient : "+b2p2_gradient_mean+" +- "+(4*Math.sqrt(b2p2_var)) );
+				if (debug) console.log("b1p1 gradient : "+b1p1_gradient_mean+" +- "+(4*Math.sqrt(b1p1_var)) );
+				if (debug) console.log("b1p2 gradient : "+b1p2_gradient_mean+" +- "+(4*Math.sqrt(b1p2_var)) );
+				if (debug) console.log("b2p1 gradient : "+b2p1_gradient_mean+" +- "+(4*Math.sqrt(b2p1_var)) );
+				if (debug) console.log("b2p2 gradient : "+b2p2_gradient_mean+" +- "+(4*Math.sqrt(b2p2_var)) );
 				
 				enoughSamples = true;
 				if (sign(b1p1_gradient_mean+4*Math.sqrt(b1p1_var)) != sign(b1p1_gradient_mean-4*Math.sqrt(b1p1_var))) enoughSamples = false;
@@ -162,13 +167,13 @@ var glr = function() {
 				//if (sign(b1p2_gradient_mean+4*Math.sqrt(b1p2_var)) != sign(b1p2_gradient_mean-4*Math.sqrt(b1p2_var))) enoughSamples = false;
 				//if (sign(b2p1_gradient_mean+4*Math.sqrt(b2p1_var)) != sign(b2p1_gradient_mean-4*Math.sqrt(b2p1_var))) enoughSamples = false;
 				
-				if (verbose) console.log("b1p1*b2p2:"+(b1p1_gradient_mean*b2p2_gradient_mean));
-				if (verbose) console.log("b1p2*b2p1:"+(b1p2_gradient_mean*b2p1_gradient_mean));
-				if (verbose) console.log("b2p2*(v0-c0):"+( b2p2_gradient_mean*(vec[0]-curpoints[0]) ));
-				if (verbose) console.log("b1p2*(v1-c1):"+( b1p2_gradient_mean*(vec[1]-curpoints[1]) ));
+				if (debug) console.log("b1p1*b2p2:"+(b1p1_gradient_mean*b2p2_gradient_mean));
+				if (debug) console.log("b1p2*b2p1:"+(b1p2_gradient_mean*b2p1_gradient_mean));
+				if (debug) console.log("b2p2*(v0-c0):"+( b2p2_gradient_mean*(vec[0]-curpoints[0]) ));
+				if (debug) console.log("b1p2*(v1-c1):"+( b1p2_gradient_mean*(vec[1]-curpoints[1]) ));
 
 				i += 1;
-				if (verbose) console.log("getting gradients, samples:"+samples)
+				if (debug) console.log("getting gradients, samples:"+samples)
 			}
 
 			// extrapolate where point lies with simple linear function
@@ -181,7 +186,7 @@ var glr = function() {
 			//diff = Math.sqrt(next_point[0]*next_point[0] + next_point[1]*next_point[1]);
 
 			//next_point = est_point + 0.5*(next_point-est_point);
-			if (verbose) console.log(next_point);
+			if (debug) console.log(next_point);
 			est_point[0] += next_point[0];
 			est_point[1] += next_point[1];
 
@@ -202,14 +207,21 @@ var glr = function() {
 				}
 			}
 
-			if (verbose) console.log(est_point);
+			iteration += 1;
+			if (verbose) console.log("Iteration "+iteration+" estimate : "+est_point);
 		}
+
+		if (verbose && samples > max_samples) {
+			console.log("Stopped estimation due to sample limit reached. Estimate did not converge.")
+		}
+
+		if (verbose) console.log("Final estimate : "+est_point);
+		
 		// calculate estimate of final value
 		var curval = fun(est_point, nsamples);
 		curpoints = [mean(curval[0]), mean(curval[1])];
-
-		if (verbose) console.log("alpha : "+curpoints[0]+" +- "+(4*std(curval[0])/Math.sqrt(nsamples)));
-		if (verbose) console.log("beta : "+curpoints[1]+" +- "+(4*std(curval[1])/Math.sqrt(nsamples)));
+		if (debug) console.log("alpha : "+curpoints[0]+" +- "+(4*std(curval[0])/Math.sqrt(nsamples)));
+		if (debug) console.log("beta : "+curpoints[1]+" +- "+(4*std(curval[1])/Math.sqrt(nsamples)));
 
 		return est_point;
 	}

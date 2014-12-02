@@ -22,9 +22,12 @@ var glr = function() {
 	/*
 	 * use gradient descent in 2d to find parameters x,y so that fun(x,y) == vec
 	 */
-	var optimize2d = function(vec, fun, init_points, epsilon, nsamples, max_samples, gradient_evaluation_width, lower_limit, upper_limit, verbose) {
+	var optimize2d = function(vec, fun, init_points, epsilon, nsamples, max_samples, gradient_evaluation_width, lower_limit, upper_limit, verbose, debug) {
 		if (typeof(verbose) === 'undefined') {
 			verbose = true;
+		}
+		if (typeof(debug) === 'undefined') {
+			debug = false;
 		}
 
 		// clone variables
@@ -35,7 +38,8 @@ var glr = function() {
 		var samples = 0;
 		var diff = Infinity;
 		var est_point = init_points;
-		if (verbose) console.log(est_point);
+		if (verbose) console.log("Initial estimate : "+est_point);
+		var iteration = 0;
 		while (samples < max_samples && diff > epsilon) {
 			// evaluate at current point
 
@@ -66,8 +70,8 @@ var glr = function() {
 				curval[1] = curval[1].concat(new_curval[1]);
 				
 				curpoints = [mean(curval[0]), mean(curval[1])];
-				if (verbose) console.log("alpha : "+curpoints[0]+" +- "+(4*std(curval[0])/Math.sqrt(curval[0].length)));
-				if (verbose) console.log("beta : "+curpoints[1]+" +- "+(4*std(curval[1])/Math.sqrt(curval[1].length)));
+				if (debug) console.log("alpha : "+curpoints[0]+" +- "+(4*std(curval[0])/Math.sqrt(curval[0].length)));
+				if (debug) console.log("beta : "+curpoints[1]+" +- "+(4*std(curval[1])/Math.sqrt(curval[1].length)));
 
 				// if CI does not contain 0 OR CI is smaller than 2*epsilon, stop
 				var ci_halfwidth_0 = (4*std(curval[0])/Math.sqrt(curval[0].length));
@@ -84,7 +88,7 @@ var glr = function() {
 				}
 				samples += num_samples;
 
-				if (verbose) console.log("checked current estimate, samples:"+samples)
+				if (debug) console.log("checked current estimate, samples:"+samples)
 			}
 			if (diff < epsilon || samples > max_samples) {
 				break;
@@ -109,10 +113,10 @@ var glr = function() {
 				d_samples[0] = d_samples[0].concat(new_d_samples[0]);
 				d_samples[1] = d_samples[1].concat(new_d_samples[1]);
 				
-				if (verbose) console.log("length samples : "+l_samples[0].length);
+				if (debug) console.log("length samples : "+l_samples[0].length);
 
 				samples += num_samples;
-				if (verbose) console.log(samples);
+				if (debug) console.log(samples);
 
 				var l_0_mean = mean(l_samples[0]);
 				var l_1_mean = mean(l_samples[1]);
@@ -126,6 +130,7 @@ var glr = function() {
 				var b1p2_gradient_mean = (u_0_mean-d_0_mean)/gradient_evaluation_width;
 				var b2p1_gradient_mean = (r_1_mean-l_1_mean)/gradient_evaluation_width;
 				var b2p2_gradient_mean = (u_1_mean-d_1_mean)/gradient_evaluation_width;
+
 				//console.log("gradient : "+gradient_mean+" +- "+(4*( (std(l_samples)+std(r_samples))/Math.pow(gradient_evaluation_width,2) )/Math.sqrt(nsamples)));
 				
 				/*console.log("b1p1 gradient : "+b1p1_gradient_mean+" +- "+(4*( (std(r_samples[0])+std(l_samples[0]))/Math.pow(gradient_evaluation_width,2) )/Math.sqrt(nsamples)));
@@ -151,10 +156,10 @@ var glr = function() {
 				var b2p1_var = ( Math.pow(std(r_samples[1]),2)+Math.pow(std(l_samples[1]),2) )/(gradient_evaluation_width*gradient_evaluation_width*r_samples[0].length);
 				var b2p2_var = ( Math.pow(std(u_samples[1]),2)+Math.pow(std(d_samples[1]),2) )/(gradient_evaluation_width*gradient_evaluation_width*r_samples[0].length);
 
-				if (verbose) console.log("b1p1 gradient : "+b1p1_gradient_mean+" +- "+(4*Math.sqrt(b1p1_var)) );
-				if (verbose) console.log("b1p2 gradient : "+b1p2_gradient_mean+" +- "+(4*Math.sqrt(b1p2_var)) );
-				if (verbose) console.log("b2p1 gradient : "+b2p1_gradient_mean+" +- "+(4*Math.sqrt(b2p1_var)) );
-				if (verbose) console.log("b2p2 gradient : "+b2p2_gradient_mean+" +- "+(4*Math.sqrt(b2p2_var)) );
+				if (debug) console.log("b1p1 gradient : "+b1p1_gradient_mean+" +- "+(4*Math.sqrt(b1p1_var)) );
+				if (debug) console.log("b1p2 gradient : "+b1p2_gradient_mean+" +- "+(4*Math.sqrt(b1p2_var)) );
+				if (debug) console.log("b2p1 gradient : "+b2p1_gradient_mean+" +- "+(4*Math.sqrt(b2p1_var)) );
+				if (debug) console.log("b2p2 gradient : "+b2p2_gradient_mean+" +- "+(4*Math.sqrt(b2p2_var)) );
 				
 				enoughSamples = true;
 				if (sign(b1p1_gradient_mean+4*Math.sqrt(b1p1_var)) != sign(b1p1_gradient_mean-4*Math.sqrt(b1p1_var))) enoughSamples = false;
@@ -162,13 +167,13 @@ var glr = function() {
 				//if (sign(b1p2_gradient_mean+4*Math.sqrt(b1p2_var)) != sign(b1p2_gradient_mean-4*Math.sqrt(b1p2_var))) enoughSamples = false;
 				//if (sign(b2p1_gradient_mean+4*Math.sqrt(b2p1_var)) != sign(b2p1_gradient_mean-4*Math.sqrt(b2p1_var))) enoughSamples = false;
 				
-				if (verbose) console.log("b1p1*b2p2:"+(b1p1_gradient_mean*b2p2_gradient_mean));
-				if (verbose) console.log("b1p2*b2p1:"+(b1p2_gradient_mean*b2p1_gradient_mean));
-				if (verbose) console.log("b2p2*(v0-c0):"+( b2p2_gradient_mean*(vec[0]-curpoints[0]) ));
-				if (verbose) console.log("b1p2*(v1-c1):"+( b1p2_gradient_mean*(vec[1]-curpoints[1]) ));
+				if (debug) console.log("b1p1*b2p2:"+(b1p1_gradient_mean*b2p2_gradient_mean));
+				if (debug) console.log("b1p2*b2p1:"+(b1p2_gradient_mean*b2p1_gradient_mean));
+				if (debug) console.log("b2p2*(v0-c0):"+( b2p2_gradient_mean*(vec[0]-curpoints[0]) ));
+				if (debug) console.log("b1p2*(v1-c1):"+( b1p2_gradient_mean*(vec[1]-curpoints[1]) ));
 
 				i += 1;
-				if (verbose) console.log("getting gradients, samples:"+samples)
+				if (debug) console.log("getting gradients, samples:"+samples)
 			}
 
 			// extrapolate where point lies with simple linear function
@@ -181,7 +186,7 @@ var glr = function() {
 			//diff = Math.sqrt(next_point[0]*next_point[0] + next_point[1]*next_point[1]);
 
 			//next_point = est_point + 0.5*(next_point-est_point);
-			if (verbose) console.log(next_point);
+			if (debug) console.log(next_point);
 			est_point[0] += next_point[0];
 			est_point[1] += next_point[1];
 
@@ -202,14 +207,21 @@ var glr = function() {
 				}
 			}
 
-			if (verbose) console.log(est_point);
+			iteration += 1;
+			if (verbose) console.log("Iteration "+iteration+" estimate : "+est_point);
 		}
+
+		if (verbose && samples > max_samples) {
+			console.log("Stopped estimation due to sample limit reached. Estimate did not converge.")
+		}
+
+		if (verbose) console.log("Final estimate : "+est_point);
+		
 		// calculate estimate of final value
 		var curval = fun(est_point, nsamples);
 		curpoints = [mean(curval[0]), mean(curval[1])];
-
-		if (verbose) console.log("alpha : "+curpoints[0]+" +- "+(4*std(curval[0])/Math.sqrt(nsamples)));
-		if (verbose) console.log("beta : "+curpoints[1]+" +- "+(4*std(curval[1])/Math.sqrt(nsamples)));
+		if (debug) console.log("alpha : "+curpoints[0]+" +- "+(4*std(curval[0])/Math.sqrt(nsamples)));
+		if (debug) console.log("beta : "+curpoints[1]+" +- "+(4*std(curval[1])/Math.sqrt(nsamples)));
 
 		return est_point;
 	}
@@ -275,7 +287,7 @@ var glr = function() {
 	
 	/*** test for bernoulli proportions ***/
 
-	var bernoulli_test = function(sides, indifference, type1_error, type2_error) {
+	var bernoulli_test = function(sides, indifference, type1_error, type2_error, simulateThreshold) {
 
 		var b0, b1, stoppingTime;
 
@@ -295,6 +307,9 @@ var glr = function() {
 		if (typeof(type2_error) != 'number' || type2_error <= 0 || type2_error >= 1) {
 			console.log("parameter 'type2_error' must be a number between 0 and 1, input was : "+type2_error);
 			return;
+		}
+		if (typeof(simulateThreshold) == "undefined") {
+			simulateThreshold = true;
 		}
 
 		var x_data = [];
@@ -384,11 +399,14 @@ var glr = function() {
 
 		// get estimate (only when test is done)
 		// use bias-reduction
-		this.estimate = function() {
+		this.estimate = function(max_samples) {
 			if (!finished) {
 				return undefined;
 			}
-			var ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, 590000, 0.02, 0, 1, false);
+			if (typeof(max_samples) == "undefined") {
+				max_samples = 1500000;
+			}
+			var ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, max_samples, 0.02, 0, 1, true);
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}
@@ -401,6 +419,10 @@ var glr = function() {
 		// add single or paired datapoint (control or treatment)
 			// returns true if test is finished
 		this.addData = function(points) {
+			if (!simulateThreshold) {
+				console.log("No thresholds are defined, this mode is only for manually finding thresholds.")
+				return;
+			}
 			if (finished) {
 				if (typeof points['x'] === 'number') x_data.push(points['x']);
 				if (typeof points['y'] === 'number') y_data.push(points['y']);
@@ -449,6 +471,10 @@ var glr = function() {
 
 		// get expected samplesize for some parameters
 		this.expectedSamplesize = function(p1, p2, samples) {
+			if (!simulateThreshold) {
+				console.log("No thresholds are defined, this mode is only for manually finding thresholds.")
+				return;
+			}
 			// simulate it enough times
 			if (!samples) samples = 10000;
 			console.log("calculating expected samplesize via simulation");
@@ -494,7 +520,6 @@ var glr = function() {
 		}
 
 		var LikH0 = functions['bernoulli'][sides]['l_an'];
-		this.LikH0 = LikH0;
 		var LikHA = functions['bernoulli'][sides]['l_bn'];
 
 		var boundaryFun = function(indiff) {
@@ -515,9 +540,7 @@ var glr = function() {
 		
 		var alpha = functions['bernoulli'][sides]['alpha'];
 		var beta = functions['bernoulli'][sides]['beta'];
-		this.beta = beta;
-		this.alpha = alpha;
-		
+				
 		var simulateResult = function(p1, p2, b0, b1) {
 			var finished = false;
 			var time = 0;
@@ -535,22 +558,37 @@ var glr = function() {
 			// return result, S_x, S_y, stoppingTime
 			return [result[0], S_x, S_y, time, result[1]];
 		}
-		this.simulateResult = simulateResult;
+
+		this.alpha_level = function(b0,b1,samples) {
+			var alphas = alpha(b0, b1, indiff, simulateResult, samples);
+			var mn = mean(alphas);
+			var sderr = boot_std(alphas,1000)
+			return [mn,sderr];
+		}
+
+		this.beta_level = function(b0,b1,samples) {
+			var betas = beta(b0, b1, indiff, simulateResult, samples);
+			var mn = mean(betas);
+			var sderr = boot_std(betas,1000)
+			return [mn,sderr];	
+		}
 
 		// initialization:
 		  // calculate thresholds (unless they are stored in table)
 		if (sides in thresholds['bernoulli'] && alpha_value in thresholds['bernoulli'][sides] && beta_value in thresholds['bernoulli'][sides][alpha_value] && indifference in thresholds['bernoulli'][sides][alpha_value][beta_value]) {
 			b0 = thresholds['bernoulli'][sides][alpha_value][beta_value][indifference][0];
 			b1 = thresholds['bernoulli'][sides][alpha_value][beta_value][indifference][1];
-		} else {
+		} else if (simulateThreshold) {
 			// calculate thresholds
 			console.log("Calculating thresholds via simulation.")
 			console.log("Please note : Calculating thresholds via simulation might take a long time. To save time, consult the SeGLiR reference to find test settings that already have precalculated thresholds.")
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [50,10], 0.001, 46000, 400000, 6, 1)
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [98,14.5], 0.001, 46000, 1500000, 6, 1)
-			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [90,90], 0.001, 46000, 1500000, 6, 1)
+			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [10,10], 0.001, 46000, 1500000, 6, 1, undefined, true, false);
 			b0 = thr[0];
 			b1 = thr[1];
+		} else {
+			console.log("NB! No precalculated thresholds are found and simulation of thresholds is disabled - this mode is only for manually finding thresholds for a given alpha- and beta-level.")
 		}
 
 		this.maxSamplesize = functions['bernoulli'][sides]['max_samplesize'](b0,b1,indiff);
@@ -1100,8 +1138,9 @@ var glr = function() {
 			}
 			fs.writeFile("./test.txt",str1+"),\n"+str2+")\n", function(err){});
 			*/
+			//return [maxSample, L_na_thresholds, L_nb_thresholds];
 
-			return [maxSample, L_na_thresholds, L_nb_thresholds];
+			return maxSample;
 		}
 		return returnFunction;
 	}
@@ -1383,11 +1422,14 @@ var glr = function() {
 
 		// get estimate (only when test is done)
 		  // use bias-reduction
-		this.estimate = function() {
+		this.estimate = function(max_samples) {
 			if (!finished) {
 				return undefined;
 			}
-			var ests = optimize2d([S_x/n_x, S_y/n_y], biasFun(), [S_x/n_x, S_y/n_y], 0.005, 16400, 590000, 0.02, 0, 1, false);
+			if (typeof(max_samples) == "undefined") {
+				max_samples = 1500000;
+			}
+			var ests = optimize2d([S_x/n_x, S_y/n_y], biasFun(), [S_x/n_x, S_y/n_y], 0.005, 16400, max_samples, 0.02, 0, 1, true);
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}
@@ -1562,7 +1604,7 @@ var glr = function() {
 	
 	/*** test for comparing normal means, unknown or known variance ***/
 
-	var normal_test = function(sides, indifference, type1_error, type2_error, variance, variance_bound) {
+	var normal_test = function(sides, indifference, type1_error, type2_error, variance, variance_bound, simulateThreshold) {
 
 		var b0, b1, stoppingTime, var_bound, var_value;
 
@@ -1592,6 +1634,9 @@ var glr = function() {
 			console.log("when parameter 'variance' is specified, it must be a valid variance, i.e. number above 0, input was : "+variance);
 			return;
 		}
+		if (typeof(simulateThreshold) == "undefined") {
+			simulateThreshold = true;
+		}
 
 		var x_data = [];
 		var y_data = [];
@@ -1599,7 +1644,6 @@ var glr = function() {
 		var alpha_value = type1_error;
 		var beta_value = type2_error;
 		var indiff = indifference;
-		var var_bound 
 		if (typeof(variance) == "undefined") {
 			var_bound = variance_bound;
 		} else {
@@ -1691,11 +1735,14 @@ var glr = function() {
 
 		// get estimate (only when test is done)
 		  // use bias-reduction
-		this.estimate = function() {
+		this.estimate = function(max_samples) {
 			if (!finished) {
 				return undefined;
 			}
-			var ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, 590000, 0.02, undefined, undefined, false);
+			if (typeof(max_samples) == "undefined") {
+				max_samples = 1500000;
+			}
+			var ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, max_samples, 0.02, undefined, undefined, true);
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}
@@ -1706,6 +1753,10 @@ var glr = function() {
 		
 		// add single or paired datapoint (control or treatment)
 		this.addData = function(points) {
+			if (!simulateThreshold) {
+				console.log("No thresholds are defined, this mode is only for manually finding thresholds.")
+				return;
+			}
 			if (finished) {
 				if (typeof points['x'] === 'number') x_data.push(points['x']);
 				if (typeof points['y'] === 'number') y_data.push(points['y']);
@@ -1764,6 +1815,10 @@ var glr = function() {
 
 		// get expected samplesize for some parameters
 		this.expectedSamplesize = function(params_1, params_2, samples) {
+			if (!simulateThreshold) {
+				console.log("No thresholds are defined, this mode is only for manually finding thresholds.")
+				return;
+			}
 			// simulate it enough times
 			if (!samples) samples = 10000;
 			console.log("calculating expected samplesize via simulation");
@@ -1806,7 +1861,6 @@ var glr = function() {
 			// return result, S_x, S_y, stoppingTime
 			return [result[0], S_x, S_y, S_x2, S_y2, time, result[1]];
 		}
-		this.simulateResult = simulateResult;
 
 		var checkTest = function(S_x, S_y, S_x2, S_y2, n, d, b0, b1) {
 			// check if test should be stopped
@@ -1851,8 +1905,6 @@ var glr = function() {
 			var LikH0 = functions['normal_uv'][sides]['l_an'];
 			var LikHA = functions['normal_uv'][sides]['l_bn'];
 		}
-		this.LikH0 = LikH0;
-		this.LikHA = LikHA;
 
 		var boundaryFun = function(indiff) {
 			// simulate alpha and beta-value
@@ -1876,8 +1928,28 @@ var glr = function() {
 			var alpha = functions['normal_uv'][sides]['alpha'];
 			var beta = functions['normal_uv'][sides]['beta'];
 		}
-		this.alpha = alpha;
-		this.beta = beta;
+
+		this.alpha_level = function(b0,b1,samples) {
+			if (typeof(var_bound) == "undefined") {
+				var alphas = alpha(b0, b1, indiff, var_value, simulateResult, samples);
+			} else {
+				var alphas = alpha(b0, b1, indiff, var_bound, simulateResult, samples);
+			}
+			var mn = mean(alphas);
+			var sderr = boot_std(alphas,1000)
+			return [mn,sderr];
+		}
+
+		this.beta_level = function(b0,b1,samples) {
+			if (typeof(var_bound) == "undefined") {
+				var betas = beta(b0, b1, indiff, var_value, simulateResult, samples);
+			} else {
+				var betas = beta(b0, b1, indiff, var_bound, simulateResult, samples);
+			}
+			var mn = mean(betas);
+			var sderr = boot_std(betas,1000)
+			return [mn,sderr];	
+		}
 
 		// initialization:
 		  // calculate thresholds (unless they are stored in table)
@@ -1892,13 +1964,15 @@ var glr = function() {
 		if (sides in our_thresholds && alpha_value in our_thresholds[sides] && beta_value in our_thresholds[sides][alpha_value] && indifference in our_thresholds[sides][alpha_value][beta_value] && our_var in our_thresholds[sides][alpha_value][beta_value][indifference]) {
 			b0 = our_thresholds[sides][alpha_value][beta_value][indifference][our_var][0];
 			b1 = our_thresholds[sides][alpha_value][beta_value][indifference][our_var][1];
-		} else {
+		} else if (simulateThreshold) {
 			// calculate thresholds
 			console.log("calculating thresholds via simulation")
 			console.log("Please note : Calculating thresholds via simulation might take a long time. To save time, consult the SeGLiR reference to find test settings that already have precalculated thresholds.")
-			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [100,100], 0.001, 46000, 1500000, 6, 1)
+			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [10,10], 0.001, 46000, 1500000, 6, 1, undefined, true);
 			b0 = thr[0];
 			b1 = thr[1];
+		} else {
+			console.log("NB! No precalculated thresholds are found and simulation of thresholds is disabled - this mode is only for manually finding thresholds for a given alpha- and beta-level.");
 		}
 
 		// TODO : implement this for known variance
@@ -2425,7 +2499,7 @@ var glr = function() {
 	}
 
 	var normal_kv_twosided_LR_H0 = function(S_x, S_y, S_x2, S_y2, n, indiff, var_value) {
-		var likRatio2 = Math.exp((S_x-S_y)*(S_x-S_y)/(4*n*var_value));
+		var likRatio = Math.exp((S_x-S_y)*(S_x-S_y)/(4*n*var_value));
 
 		return likRatio;
 	}
@@ -2694,11 +2768,14 @@ var glr = function() {
 
 		// get estimate (only when test is done)
 		  // use bias-reduction
-		this.estimate = function() {
+		this.estimate = function(max_samples) {
 			if (!finished) {
 				return undefined;
 			}
-			var ests = optimize2d([S_x/n_x, S_y/n_y], biasFun(), [S_x/n_x, S_y/n_y], 0.005, 16400, 590000, 0.02, undefined, undefined, false);
+			if (typeof(max_samples) == "undefined") {
+				max_samples = 1500000;
+			}
+			var ests = optimize2d([S_x/n_x, S_y/n_y], biasFun(), [S_x/n_x, S_y/n_y], 0.005, 16400, max_samples, 0.02, undefined, undefined, true);
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}
