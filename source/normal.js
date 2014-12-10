@@ -372,10 +372,12 @@
 			console.log("NB! No precalculated thresholds are found and simulation of thresholds is disabled - this mode is only for manually finding thresholds for a given alpha- and beta-level.");
 		}
 
-		// TODO : implement this for known variance
-		//this.maxSamplesize = functions['normal_uv'][sides]['max_samplesize'](b0,b1,indiff);
 		if (var_value) {
 			var simulateH0 = functions['normal_kv'][sides]['simulateH0'](simulateResult, indiff, b0, b1, var_value);
+			// TODO : implement maxSamplesize for one-sided test as well
+			if (sides in functions['normal_kv']) {
+				this.maxSamplesize = functions['normal_kv'][sides]['max_samplesize'](indiff, var_value, b0, b1);
+			}
 		} else {
 			var simulateH0 = functions['normal_uv'][sides]['simulateH0'](simulateResult, indiff, b0, b1, var_bound);
 		}
@@ -957,7 +959,7 @@
 	var normal_kv_twosided_maxSamplesize = function(indiff, var_value, b0, b1) {
 		var part = Math.sqrt(Math.log(b0)) + Math.sqrt(Math.log(b1));
 		var max = part*part*(4*var_value)/(indiff*indiff);
-		return max;
+		return function(){return max;};
 	}
 
 	functions['normal_uv'] = {
@@ -983,13 +985,14 @@
 			'alpha' : normal_kv_twosided_alpha_imp,
 			'beta' : normal_kv_twosided_beta_imp,
 			'simulateH0' : normal_twosided_simulateH0,
+			'max_samplesize' : normal_kv_twosided_maxSamplesize
 		},
 		'one-sided' : {
 			'l_an' : normal_kv_onesided_LR_H0,
 			'l_bn' : normal_kv_onesided_LR_HA,
 			'alpha' : normal_kv_onesided_alpha_imp,
 			'beta' : normal_kv_onesided_beta_imp,
-			'simulateH0' : normal_onesided_simulateH0,	
+			'simulateH0' : normal_onesided_simulateH0,
 		}
 	}
 		  

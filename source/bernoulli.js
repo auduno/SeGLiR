@@ -617,7 +617,7 @@
 				}
 			}
 			// write to file
-			var fs = require('fs');
+			/*var fs = require('fs');
 			var str1 = "c(";
 			var str2 = "c(";
 			for (var i = 0;i < maxSample;i++) {
@@ -633,8 +633,9 @@
 				}
 			}
 			fs.writeFile("./test.txt",str1+"),\n"+str2+")\n", function(err){});
+			return [maxSample, L_na_thresholds, L_nb_thresholds];*/
 
-			return [maxSample, L_na_thresholds, L_nb_thresholds];
+			return maxSample;
 		}
 		return returnFunction;
 	}
