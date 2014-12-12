@@ -69,10 +69,10 @@
 				if (outcomes_diff[i] < ((S_x/n_x)-(S_y/n_y))) lower_count += 1;
 			}
 			//console.log("lower count:"+lower_count)
-			var b = jStat.jStat.normal.inv(lower_count/samples,0,1);
+			var b = jStat.normal.inv(lower_count/samples,0,1);
 			//console.log(b);
-			var upper_n = Math.floor((samples+1)*jStat.jStat.normal.cdf(2*b + 1.96,0,1));
-			var lower_n = Math.floor((samples+1)*jStat.jStat.normal.cdf(2*b - 1.96,0,1));
+			var upper_n = Math.floor((samples+1)*jStat.normal.cdf(2*b + 1.96,0,1));
+			var lower_n = Math.floor((samples+1)*jStat.normal.cdf(2*b - 1.96,0,1));
 			//console.log("lower_n:"+lower_n)
 			//console.log("upper_n:"+upper_n)
 			var lower_est = outcomes[lower_n];
@@ -194,7 +194,7 @@
 		var generate = function(params) {
 			var mean = params[0];
 			var std = Math.sqrt(params[1]);
-			return jStat.jStat.normal.sample(mean,std);
+			return jStat.normal.sample(mean,std);
 		}
 
 		var simulateResult = function(params_1, params_2) {

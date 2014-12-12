@@ -95,10 +95,10 @@
 				if (outcomes_diff[i] < ((S_x/n)-(S_y/n))) lower_count += 1;
 			}
 			//console.log("lower count:"+lower_count)
-			var b = jStat.jStat.normal.inv(lower_count/samples,0,1);
+			var b = jStat.normal.inv(lower_count/samples,0,1);
 			//console.log(b);
-			var upper_n = Math.floor((samples+1)*jStat.jStat.normal.cdf(2*b + 1.96,0,1));
-			var lower_n = Math.floor((samples+1)*jStat.jStat.normal.cdf(2*b - 1.96,0,1));
+			var upper_n = Math.floor((samples+1)*jStat.normal.cdf(2*b + 1.96,0,1));
+			var lower_n = Math.floor((samples+1)*jStat.normal.cdf(2*b - 1.96,0,1));
 			//console.log("lower_n:"+lower_n)
 			//console.log("upper_n:"+upper_n)
 			var lower_est = outcomes[lower_n];
@@ -359,15 +359,15 @@
 		for (var i = 0;i < samples;i++) {
 			var beta_alpha = 5;
 			var beta_beta = 5;
-			var p1_ran = jStat.jStat.beta.sample(beta_alpha,beta_beta);
-			var p2_ran = jStat.jStat.beta.sample(beta_alpha,beta_beta);
+			var p1_ran = jStat.beta.sample(beta_alpha,beta_beta);
+			var p2_ran = jStat.beta.sample(beta_alpha,beta_beta);
 
 			var res = simulateResult(p1_ran,p2_ran,b0,b1);
 			if (res[0] == 'false') {
 				var stoppingTime = res[3];
 				var sum_x = res[1];
 				var sum_y = res[2];
-				var weight = Math.exp( logOp(sum_x, p2) + logOp(stoppingTime-sum_x, 1-p2) + jStat.jStat.betaln(beta_alpha, beta_beta) - jStat.jStat.betaln(beta_alpha+sum_x, beta_beta+stoppingTime-sum_x) + logOp(sum_y, p1) + logOp(stoppingTime-sum_y, 1-p1) + jStat.jStat.betaln(beta_alpha, beta_beta) - jStat.jStat.betaln(beta_alpha+sum_y, beta_beta+stoppingTime-sum_y) );
+				var weight = Math.exp( logOp(sum_x, p2) + logOp(stoppingTime-sum_x, 1-p2) + jStat.betaln(beta_alpha, beta_beta) - jStat.betaln(beta_alpha+sum_x, beta_beta+stoppingTime-sum_x) + logOp(sum_y, p1) + logOp(stoppingTime-sum_y, 1-p1) + jStat.betaln(beta_alpha, beta_beta) - jStat.betaln(beta_alpha+sum_y, beta_beta+stoppingTime-sum_y) );
 				alphas.push(weight);
 			} else {
 				alphas.push(0);

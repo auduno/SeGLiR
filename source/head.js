@@ -1,4 +1,6 @@
-var jStat = require('jStat');
+if (typeof exports === 'object') {
+	var jStat = require('jStat').jStat;
+}
 
 // main class
 var glr = function() {

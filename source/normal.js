@@ -114,10 +114,10 @@
 				if (outcomes_diff[i] < ((S_x/n)-(S_y/n))) lower_count += 1;
 			}
 			//console.log("lower count:"+lower_count)
-			var b = jStat.jStat.normal.inv(lower_count/samples,0,1);
+			var b = jStat.normal.inv(lower_count/samples,0,1);
 			//console.log(b);
-			var upper_n = Math.floor((samples+1)*jStat.jStat.normal.cdf(2*b + 1.96,0,1));
-			var lower_n = Math.floor((samples+1)*jStat.jStat.normal.cdf(2*b - 1.96,0,1));
+			var upper_n = Math.floor((samples+1)*jStat.normal.cdf(2*b + 1.96,0,1));
+			var lower_n = Math.floor((samples+1)*jStat.normal.cdf(2*b - 1.96,0,1));
 			//console.log("lower_n:"+lower_n)
 			//console.log("upper_n:"+upper_n)
 			var lower_est = outcomes[lower_n];
@@ -232,7 +232,7 @@
 		var generate = function(params) {
 			var mean = params[0];
 			var std = Math.sqrt(params[1]);
-			return jStat.jStat.normal.sample(mean,std);
+			return jStat.normal.sample(mean,std);
 		}
 
 		var simulateResult = function(params_1, params_2, b0, b1) {
@@ -422,7 +422,7 @@
 		var beta = 1; // precision/inverse-variance of the importance sampling distribution
 		//var starttime = (new Date()).getTime();
 		for (var i = 0;i < samples;i++) {
-			var z = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
+			var z = jStat.normal.sample(0,Math.sqrt(1/beta));
 
 			var finished = false;
 			var S_x = 0;
@@ -431,7 +431,7 @@
 			while (!finished) {
 				n += 1;
 				// pull xs from N(0,2*var_val)
-				S_x += jStat.jStat.normal.sample(z,Math.sqrt(2*var_val));
+				S_x += jStat.normal.sample(z,Math.sqrt(2*var_val));
 
 				// test on simplified boundaries
 				var L_na = Math.exp( S_x*S_x/(4*n*var_val) );
@@ -472,7 +472,7 @@
 		var beta = 1; // precision/inverse-variance of the importance sampling distribution
 		//var starttime = (new Date()).getTime();
 		for (var i = 0;i < samples;i++) {
-			var z = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
+			var z = jStat.normal.sample(0,Math.sqrt(1/beta));
 			var mu_1 = -z/2;
 			var mu_2 = z/2;
 			var res = simulateResult([mu_1,var_val],[mu_2,var_val],b0,b1);
@@ -525,7 +525,7 @@
 			while (!finished) {
 				n += 1;
 				// pull xs from N(0,2*var_val)
-				S_x += jStat.jStat.normal.sample(0,Math.sqrt(2*var_val));
+				S_x += jStat.normal.sample(0,Math.sqrt(2*var_val));
 				
 				// test on simplified boundaries
 				var L_na = Math.exp( S_x*S_x/(4*n*var_val) );
@@ -661,7 +661,7 @@
 		var beta = 1; // precision/inverse-variance of the importance sampling distribution
 		//var starttime = (new Date()).getTime();
 		for (var i = 0;i < samples;i++) {
-			var z = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
+			var z = jStat.normal.sample(0,Math.sqrt(1/beta));
 			z = Math.abs(z);
 
 			var finished = false;
@@ -671,7 +671,7 @@
 			while (!finished) {
 				n += 1;
 				// pull xs from N(0,2*var_val)
-				S_x += jStat.jStat.normal.sample(z,Math.sqrt(2*var_val));
+				S_x += jStat.normal.sample(z,Math.sqrt(2*var_val));
 
 				var mle = S_x/n;
 				// test on simplified boundaries
@@ -699,7 +699,7 @@
 				var delta = (n + 2*var_val*beta)/(4*var_val);
 				var pt1 = Math.sqrt(beta/(2*delta));
 				var pt2 = Math.exp((2*indiff*S_x + n*indiff*indiff)/(4*var_val) + (S_x*S_x)/(16*delta*var_val*var_val));
-				var pt3 = jStat.jStat.erf(S_x/(4*var_val*Math.sqrt(delta))) + 1;
+				var pt3 = jStat.erf(S_x/(4*var_val*Math.sqrt(delta))) + 1;
 				var weight = pt1*pt2*pt3;
 				alphas.push(1/weight);
 			} else {
@@ -718,7 +718,7 @@
 		var alphas = [];
 		var beta = 1;
 		for (var i = 0;i < samples;i++) {
-			var z = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
+			var z = jStat.normal.sample(0,Math.sqrt(1/beta));
 			z = Math.abs(z);
 
 			var res = simulateResult([z/2,var_val],[-z/2,var_val],b0,b1);
@@ -729,7 +729,7 @@
 				var delta = (n + 2*var_val*beta)/(4*var_val);
 				var pt1 = Math.sqrt(beta/(2*delta));
 				var pt2 = Math.exp((S_x - S_y)*(S_x - S_y)/(delta*16*var_val*var_val) + (indiff*(S_x - S_y + (n*indiff)/2)/(2*var_val)));
-				var pt3 = jStat.jStat.erf((S_x - S_y)/Math.sqrt(4*var_val*(n + 2*beta*var_val))) + 1;
+				var pt3 = jStat.erf((S_x - S_y)/Math.sqrt(4*var_val*(n + 2*beta*var_val))) + 1;
 				var weight = pt1*pt2*pt3;
 				alphas.push(1/weight);
 			} else {
@@ -769,7 +769,7 @@
 		var beta = 1; // precision/inverse-variance of the importance sampling distribution
 		//var starttime = (new Date()).getTime();
 		for (var i = 0;i < samples;i++) {
-			var z = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
+			var z = jStat.normal.sample(0,Math.sqrt(1/beta));
 			z = Math.abs(z);
 
 			var finished = false;
@@ -779,7 +779,7 @@
 			while (!finished) {
 				n += 1;
 				// pull xs from N(0,2*var_val)
-				S_x += jStat.jStat.normal.sample(-z,Math.sqrt(2*var_val));
+				S_x += jStat.normal.sample(-z,Math.sqrt(2*var_val));
 
 				var mle = S_x/n;
 				// test on simplified boundaries
@@ -807,7 +807,7 @@
 				var delta = (n + 2*var_val*beta)/(4*var_val);
 				var pt1 = Math.sqrt(beta/(2*delta));
 				var pt2 = Math.exp((-2*indiff*S_x + n*indiff*indiff)/(4*var_val) + (S_x*S_x)/(16*delta*var_val*var_val));
-				var pt3 = 1 - jStat.jStat.erf(S_x/(4*var_val*Math.sqrt(delta)));
+				var pt3 = 1 - jStat.erf(S_x/(4*var_val*Math.sqrt(delta)));
 				var weight = pt1*pt2*pt3;
 				betas.push(1/weight);
 			} else {
@@ -826,7 +826,7 @@
 		var betas = [];
 		var beta = 1;
 		for (var i = 0;i < samples;i++) {
-			var z = jStat.jStat.normal.sample(0,Math.sqrt(1/beta));
+			var z = jStat.normal.sample(0,Math.sqrt(1/beta));
 			z = Math.abs(z);
 
 			var res = simulateResult([-z/2,var_val],[z/2,var_val],b0,b1);
@@ -837,7 +837,7 @@
 				var delta = (n + 2*var_val*beta)/(4*var_val);
 				var pt1 = Math.sqrt(beta/(2*delta));
 				var pt2 = Math.exp((S_x - S_y)*(S_x - S_y)/(delta*16*var_val*var_val) - (indiff*(S_x - S_y - (n*indiff)/2)/(2*var_val)));
-				var pt3 = jStat.jStat.erf(-(S_x - S_y)/(4*var_val*Math.sqrt(delta))) + 1;
+				var pt3 = jStat.erf(-(S_x - S_y)/(4*var_val*Math.sqrt(delta))) + 1;
 				var weight = pt1*pt2*pt3;
 				betas.push(1/weight);
 			} else {
