@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>Sequential GLR demo</title>
+		<meta charset="utf-8">
+		<style>
+			@import url(https://fonts.googleapis.com/css?family=Lato:300italic,700italic,300,700);
+			
+			body {
+				font-family: 'Lato';
+				background-color: #f0f0f0;
+				margin: 0px auto;
+				max-width: 1150px;
+			}
+			
+			#content {
+				margin-top : 50px;
+				margin-left : auto;
+				margin-right : auto;
+				max-width: 600px;
+			}
+			
+			h2 {
+				font-weight : 400;
+			}
+			
+			.btn {
+				font-family: 'Lato';
+				font-size: 16px;
+			}
+
+			#controls {
+				text-align : center;
+			}
+
+			#container {
+				width: 300px;
+				height: 120px;
+				margin: auto;
+			}
+
+			#fix_res, #glr_res {
+				width: 150px;
+				text-align : center;
+			}
+
+			#fix_res {
+				float: left;
+			}
+
+			#glr_res {
+				float: right;
+			}
+
+			#est_mean {
+				text-align : center;
+			}
+
+			/* d3 styling */
+			path {
+				stroke: steelblue;
+				stroke-width: 1;
+				fill: none;
+			}
+			
+			.axis {
+			  shape-rendering: crispEdges;
+			}
+
+			.x.axis line {
+			  stroke: lightgrey;
+			}
+
+			.x.axis .minor {
+			  stroke-opacity: .5;
+			}
+
+			.x.axis path {
+			  display: none;
+			}
+
+			.y.axis line, .y.axis path {
+			  fill: none;
+			  stroke: #000;
+			}
+		</style>
+		<script type="text/javascript">
+			var _gaq = _gaq || [];
+			_gaq.push(['_setAccount', 'UA-32642923-1']);
+			_gaq.push(['_trackPageview']);
+
+			(function() {
+				var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+				ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+				var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+			})();
+
+		</script>
+		<script src="./js/jstat.js"></script>
+		<script src="./js/SeGLiR.js"></script>
+		<script src="http://d3js.org/d3.v3.js"></script>
+	</head>
+	<body>
+		<div id="content">
+			<h2>Sequential GLR comparison</h2>
+			<p>This is a comparison of A/B testing with a fixed samplesize test versus a sequential GLR test (via SeGLiR), where we simulate outcome of the test and samples needed. Both tests are done at alpha-level 0.05, beta-level 0.10 (or vice versa power = 0.9), and indifference region of size 0.01. Note that the fixed sample-size test always needs 52425 samples to conclude, while the samplesize needed for the sequential GLR test varies depending on the true difference between p_0 and p_1.</p>
+			<p>For more information about the sequential GLR test, take a look at this blog post, and the library SeGLiR.</p>
+			<div id="d3chart"></div>
+			<div id="container">
+				<div id="fix_res">
+					<h3>FIX</h3>
+					<p>20%</p>
+				</div>
+				<div id="glr_res">
+					<h3>GLR</h3>
+					<p>20%</p>
+				</div>
+			</div>
+			<p id = "est_mean"></p>
+			<div id="controls">
+				<input type="text" value=0.4 id="p1"></input>
+				<input type="text" value=0.5 id="p2"></input>
+				<input class="btn" type="button" value="start" onclick="startTest()" id="startbutton"></input>
+			</div>
+			<a href="https://github.com/auduno/seglir"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png" alt="Fork me on GitHub"></a>
+			<script>
+				var seq_glr = new glr();
+
+				var p1, p2;
+				var testRunning = false;
+				var fix_samples = 52425; // according to http://powerandsamplesize.com/Calculators/Compare-2-Proportions/2-Sample-Equality
+
+				// function to validate input
+				var validateInput = function() {
+					p1 = parseFloat(document.getElementById('p1').value)
+					p2 = parseFloat(document.getElementById('p2').value)
+					if (isNaN(p1) || p1 < 0 || p1 > 1) {
+						alert("p1 was not a valid number between 0 and 1")
+						return false;
+					}
+					if (isNaN(p2) || p2 < 0 || p2 > 1) {
+						alert("p2 was not a valid number between 0 and 1")
+						return false;
+					}
+					return true;
+				}
+
+				// function to start iteration
+				var startTest = function() {
+					// check test is not running still
+					if (testRunning) return;
+					// validate input
+					if (!validateInput()) return;
+					testRunning = true;
+					var glrTestDone = false;
+					var numSamples = 0;
+					var x_sum = 0;
+					var y_sum = 0;
+					// create instance of seglir
+					var test = seq_glr.test("bernoulli","two-sided",0.01,0.05,0.1);
+
+					var estimates = [];
+
+					while (numSamples <= fix_samples || !glrTestDone) {
+						// pull number
+						var x_sample = Math.random() < p1 ? 1 : 0;
+						var y_sample = Math.random() < p2 ? 1 : 0;
+						numSamples += 1;
+						x_sum += x_sample;
+						y_sum += y_sample;
+						var p1_hat = x_sum/numSamples;
+						var p2_hat = y_sum/numSamples;
+						
+						estimates.push(p1_hat-p2_hat);
+
+						document.getElementById('est_mean').innerHTML = "Estimated mean : "+(p1_hat-p2_hat).toFixed(3);
+						// apply to glr (if not done) and check if it's done
+						if (!glrTestDone) {
+							var glr_res = test.addData({x : x_sample, y : y_sample});
+							if (typeof(glr_res) != "undefined") {
+								// render results
+								renderGLRResults(numSamples, glr_res == "true",(p1_hat-p2_hat).toFixed(3));
+								glrTestDone = true;
+							}
+						}
+						// apply to z-test only if done
+						if (numSamples == fix_samples) {
+							var z_value = (p1_hat-p2_hat)/Math.sqrt((p1_hat*(1-p1_hat))/numSamples + (p2_hat*(1-p2_hat))/numSamples );
+							if (Math.abs(z_value) > 1.96) {
+								renderZResults(false,(p1_hat-p2_hat).toFixed(3));
+							} else {
+								renderZResults(true,(p1_hat-p2_hat).toFixed(3));
+							}
+						}
+					}
+					updateGraph(estimates);
+
+					testRunning = false;
+				}
+
+				// function to render GLR results
+				var renderGLRResults = function(time, result, est) {
+					// render number samples
+					if (result) {
+						var res_string = "p<sub>0</sub> = p<sub>1</sub>";
+					} else {
+						var res_string = "p<sub>0</sub> ≠ p<sub>1</sub>";
+					}
+					document.getElementById('glr_res').innerHTML = "<h3>GLR Done!</h3><p>Samples : "+time+"</p><p>Result : "+res_string+"</p><p>Diff estimate : "+est+"</p>";
+					// render conclusion
+				}
+
+				// function to render z-test results
+				var renderZResults = function(result, est) {
+					// render number samples
+					if (result) {
+						var res_string = "p<sub>0</sub> = p<sub>1</sub>";
+					} else {
+						var res_string = "p<sub>0</sub> ≠ p<sub>1</sub>";
+					}
+					document.getElementById('fix_res').innerHTML = "<h3>Fixed Done!</h3><p>Samples : "+fix_samples+"</p><p>Result : "+res_string+"</p><p>Diff estimate : "+est+"</p>";
+					// render conclusion
+				}
+
+				/*  d3 stuff */
+				var data = [3, 6, 2, 7, 5, 2, 1, 3, 8, 9, 2, 5, 7];
+
+				var margin = {top: 20, right: 20, bottom: 30, left: 50},
+    				width = 600 - margin.left - margin.right,
+    				height = 400 - margin.top - margin.bottom;
+				
+				var x = d3.scale.linear().domain([0, data.length]).range([0, width]);
+    			var y = d3.scale.linear().domain([-1,1]).range([height, 0]);
+
+				var line = d3.svg.line()
+				    .x(function(d,i) { return x(i); })
+				    .y(function(d) { return y(d); });
+				
+				var svg = d3.select("#d3chart").append("svg")
+				    .attr("width", width + margin.left + margin.right)
+				    .attr("height", height + margin.top + margin.bottom)
+				.append("g")
+				    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    			
+    			var xAxis = d3.svg.axis().scale(x).orient("bottom").ticks(5);
+    			svg.append("svg:g")
+    				.attr("class","x axis")
+    				.attr("transform", "translate(0,"+height+")")
+    				.call(xAxis);
+				
+				var yAxis = d3.svg.axis().scale(y).orient("left").ticks(5);
+				svg.append("svg:g")
+					.attr("class", "y axis")
+			        .attr("transform", "translate(-25,0)")
+			        .call(yAxis);
+
+				var path = svg.append("svg:path").attr("d",line(data));
+
+				function updateGraph(data) {
+					x.domain([0, data.length]);
+
+					path.attr("d",line(data));
+
+					svg.transition();
+
+					svg.select(".x.axis")
+						.call(xAxis);
+				}
+
+
+			</script>
+		</div>
+	</body>
+</html>
