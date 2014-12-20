@@ -94,7 +94,7 @@
 	</head>
 	<body>
 		<div id="content">
-			<h2>Sequential GLR comparison</h2>
+			<h2>Samplesize comparison</h2>
 			<div id="container">
 				<div id="fix_res">
 				</div>
@@ -108,9 +108,9 @@
 				<input type="text" value=0.5 id="p2" size="6"></input>
 				<input class="btn" type="button" value="Simulate" onclick="startTest()" id="startbutton"></input>
 			</div>
-			<p>This is a comparison of A/B testing with a fixed samplesize test versus a sequential GLR test (via SeGLiR). Click to generate data from the given proportions p<sub>1</sub> and p<sub>2</sub> and simulate outcomes of the test as well as how many samples are needed.</p>
-			<p>Both tests are "comparison of proportions" tests done at α-level 0.05, β-level 0.10, where the null-hypothesis is that p<sub>1</sub> = p<sub>2</sub>, while the alternative hypothesis is that p<sub>1</sub> <span>≠</span> p<sub>2</sub>. We also specify that we are interested in detecting any difference between p<sub>0</sub> and p<sub>1</sub> larger than 0.01. Note that the fixed sample-size test always needs 52425 samples to conclude, while the samplesize needed for the sequential GLR test varies depending on the true difference between p<sub>0</sub> and p<sub>1</sub>.</p>
-			<p>For more information about the sequential GLR test take a look at this blog post, and for an implementation take a look at the javascript library SeGLiR.</p>
+			<p>This is a comparison of A/B testing with a fixed samplesize test versus a sequential GLR test (via <a href="https://github.com/auduno/seglir">SeGLiR</a>). Click to generate data from the given proportions p<sub>1</sub> and p<sub>2</sub> and simulate outcomes of the test as well as how many samples are needed.</p>
+			<p>Both tests are "comparison of proportions" tests done at α-level 0.05, β-level 0.10, where the null-hypothesis is that p<sub>1</sub> = p<sub>2</sub>, while the alternative hypothesis is that p<sub>1</sub> <span>≠</span> p<sub>2</sub>. We also specify that we are interested in detecting any difference between p<sub>0</sub> and p<sub>1</sub> larger than 0.01. Note that the fixed sample-size test always needs 52425 samples to conclude, while the samplesize needed for the sequential GLR test varies depending on the generated data as well as the true difference between p<sub>0</sub> and p<sub>1</sub>.</p>
+			<p>For more information about the sequential GLR test take a look at <a href="http://auduno.github.io/SeGLiR/documentation/reference.html">the reference of SeGLiR</a>.</p>
 			<a href="https://github.com/auduno/seglir"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png" alt="Fork me on GitHub"></a>
 			<script>
 				var seq_glr = new glr();
@@ -189,7 +189,7 @@
 					} else {
 						var res_string = "p<sub>0</sub> ≠ p<sub>1</sub>";
 					}
-					document.getElementById('glr_res').innerHTML = "<h3>Sequential GLR:</h3><p>Test conclusion : "+res_string+"</p><p>Samples needed : "+time+"</p><p>Estimated difference : "+est+"</p>";
+					document.getElementById('glr_res').innerHTML = "<h3>Sequential GLR:</h3><p>Test conclusion : "+res_string+"</p><p>Samples needed : "+time+"</p>";
 					// render conclusion
 				}
 
@@ -201,7 +201,7 @@
 					} else {
 						var res_string = "p<sub>0</sub> ≠ p<sub>1</sub>";
 					}
-					document.getElementById('fix_res').innerHTML = "<h3>Fixed samplesize:</h3><p>Test conclusion : "+res_string+"</p><p>Samples needed : "+fix_samples+"</p><p>Estimated difference : "+est+"</p>";
+					document.getElementById('fix_res').innerHTML = "<h3>Fixed samplesize:</h3><p>Test conclusion : "+res_string+"</p><p>Samples needed : "+fix_samples+"</p>";
 					// render conclusion
 				}
 			</script>
