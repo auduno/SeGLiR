@@ -27,6 +27,7 @@
 			.btn {
 				font-family: 'Lato';
 				font-size: 16px;
+				margin-left:20px;
 			}
 
 			#controls {
@@ -34,13 +35,14 @@
 			}
 
 			#container {
-				width: 300px;
-				height: 120px;
+				width: 500px;
+				height: 300px;
 				margin: auto;
 			}
 
 			#fix_res, #glr_res {
-				width: 150px;
+				margin-top:50px;
+				width: 200px;
 				text-align : center;
 			}
 
@@ -56,33 +58,24 @@
 				text-align : center;
 			}
 
-			/* d3 styling */
-			path {
-				stroke: steelblue;
-				stroke-width: 1;
-				fill: none;
-			}
-			
-			.axis {
-			  shape-rendering: crispEdges;
+			input {
+				margin-right: 20px;
 			}
 
-			.x.axis line {
-			  stroke: lightgrey;
+			span {
+				font-size: smaller;
 			}
 
-			.x.axis .minor {
-			  stroke-opacity: .5;
+			sup, sub {
+			    height: 0;
+			    line-height: 1;
+			    vertical-align: baseline;
+			    _vertical-align: bottom;
+			    position: relative;
 			}
 
-			.x.axis path {
-			  display: none;
-			}
-
-			.y.axis line, .y.axis path {
-			  fill: none;
-			  stroke: #000;
-			}
+			sup { bottom: 1ex; }
+			sub { top: .5ex; }
 		</style>
 		<script type="text/javascript">
 			var _gaq = _gaq || [];
@@ -98,30 +91,26 @@
 		</script>
 		<script src="./js/jstat.js"></script>
 		<script src="./js/SeGLiR.js"></script>
-		<script src="http://d3js.org/d3.v3.js"></script>
 	</head>
 	<body>
 		<div id="content">
 			<h2>Sequential GLR comparison</h2>
-			<p>This is a comparison of A/B testing with a fixed samplesize test versus a sequential GLR test (via SeGLiR), where we simulate outcome of the test and samples needed. Both tests are done at alpha-level 0.05, beta-level 0.10 (or vice versa power = 0.9), and indifference region of size 0.01. Note that the fixed sample-size test always needs 52425 samples to conclude, while the samplesize needed for the sequential GLR test varies depending on the true difference between p_0 and p_1.</p>
-			<p>For more information about the sequential GLR test, take a look at this blog post, and the library SeGLiR.</p>
-			<div id="d3chart"></div>
 			<div id="container">
 				<div id="fix_res">
-					<h3>FIX</h3>
-					<p>20%</p>
 				</div>
 				<div id="glr_res">
-					<h3>GLR</h3>
-					<p>20%</p>
 				</div>
 			</div>
-			<p id = "est_mean"></p>
 			<div id="controls">
-				<input type="text" value=0.4 id="p1"></input>
-				<input type="text" value=0.5 id="p2"></input>
-				<input class="btn" type="button" value="start" onclick="startTest()" id="startbutton"></input>
+				<label for="p1">p<sub>1</sub>:</label>
+				<input type="text" value=0.4 id="p1" size="6"></input>
+				<label for="p2">p<sub>2</sub>:</label>
+				<input type="text" value=0.5 id="p2" size="6"></input>
+				<input class="btn" type="button" value="Simulate" onclick="startTest()" id="startbutton"></input>
 			</div>
+			<p>This is a comparison of A/B testing with a fixed samplesize test versus a sequential GLR test (via SeGLiR). Click to generate data from the given proportions p<sub>1</sub> and p<sub>2</sub> and simulate outcomes of the test as well as how many samples are needed.</p>
+			<p>Both tests are "comparison of proportions" tests done at α-level 0.05, β-level 0.10, where the null-hypothesis is that p<sub>1</sub> = p<sub>2</sub>, while the alternative hypothesis is that p<sub>1</sub> <span>≠</span> p<sub>2</sub>. We also specify that we are interested in detecting any difference between p<sub>0</sub> and p<sub>1</sub> larger than 0.01. Note that the fixed sample-size test always needs 52425 samples to conclude, while the samplesize needed for the sequential GLR test varies depending on the true difference between p<sub>0</sub> and p<sub>1</sub>.</p>
+			<p>For more information about the sequential GLR test take a look at this blog post, and for an implementation take a look at the javascript library SeGLiR.</p>
 			<a href="https://github.com/auduno/seglir"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png" alt="Fork me on GitHub"></a>
 			<script>
 				var seq_glr = new glr();
@@ -159,8 +148,6 @@
 					// create instance of seglir
 					var test = seq_glr.test("bernoulli","two-sided",0.01,0.05,0.1);
 
-					var estimates = [];
-
 					while (numSamples <= fix_samples || !glrTestDone) {
 						// pull number
 						var x_sample = Math.random() < p1 ? 1 : 0;
@@ -171,9 +158,6 @@
 						var p1_hat = x_sum/numSamples;
 						var p2_hat = y_sum/numSamples;
 						
-						estimates.push(p1_hat-p2_hat);
-
-						document.getElementById('est_mean').innerHTML = "Estimated mean : "+(p1_hat-p2_hat).toFixed(3);
 						// apply to glr (if not done) and check if it's done
 						if (!glrTestDone) {
 							var glr_res = test.addData({x : x_sample, y : y_sample});
@@ -193,7 +177,6 @@
 							}
 						}
 					}
-					updateGraph(estimates);
 
 					testRunning = false;
 				}
@@ -206,7 +189,7 @@
 					} else {
 						var res_string = "p<sub>0</sub> ≠ p<sub>1</sub>";
 					}
-					document.getElementById('glr_res').innerHTML = "<h3>GLR Done!</h3><p>Samples : "+time+"</p><p>Result : "+res_string+"</p><p>Diff estimate : "+est+"</p>";
+					document.getElementById('glr_res').innerHTML = "<h3>Sequential GLR:</h3><p>Test conclusion : "+res_string+"</p><p>Samples needed : "+time+"</p><p>Estimated difference : "+est+"</p>";
 					// render conclusion
 				}
 
@@ -218,56 +201,9 @@
 					} else {
 						var res_string = "p<sub>0</sub> ≠ p<sub>1</sub>";
 					}
-					document.getElementById('fix_res').innerHTML = "<h3>Fixed Done!</h3><p>Samples : "+fix_samples+"</p><p>Result : "+res_string+"</p><p>Diff estimate : "+est+"</p>";
+					document.getElementById('fix_res').innerHTML = "<h3>Fixed samplesize:</h3><p>Test conclusion : "+res_string+"</p><p>Samples needed : "+fix_samples+"</p><p>Estimated difference : "+est+"</p>";
 					// render conclusion
 				}
-
-				/*  d3 stuff */
-				var data = [3, 6, 2, 7, 5, 2, 1, 3, 8, 9, 2, 5, 7];
-
-				var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    				width = 600 - margin.left - margin.right,
-    				height = 400 - margin.top - margin.bottom;
-				
-				var x = d3.scale.linear().domain([0, data.length]).range([0, width]);
-    			var y = d3.scale.linear().domain([-1,1]).range([height, 0]);
-
-				var line = d3.svg.line()
-				    .x(function(d,i) { return x(i); })
-				    .y(function(d) { return y(d); });
-				
-				var svg = d3.select("#d3chart").append("svg")
-				    .attr("width", width + margin.left + margin.right)
-				    .attr("height", height + margin.top + margin.bottom)
-				.append("g")
-				    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    			
-    			var xAxis = d3.svg.axis().scale(x).orient("bottom").ticks(5);
-    			svg.append("svg:g")
-    				.attr("class","x axis")
-    				.attr("transform", "translate(0,"+height+")")
-    				.call(xAxis);
-				
-				var yAxis = d3.svg.axis().scale(y).orient("left").ticks(5);
-				svg.append("svg:g")
-					.attr("class", "y axis")
-			        .attr("transform", "translate(-25,0)")
-			        .call(yAxis);
-
-				var path = svg.append("svg:path").attr("d",line(data));
-
-				function updateGraph(data) {
-					x.domain([0, data.length]);
-
-					path.attr("d",line(data));
-
-					svg.transition();
-
-					svg.select(".x.axis")
-						.call(xAxis);
-				}
-
-
 			</script>
 		</div>
 	</body>
