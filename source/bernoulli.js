@@ -299,6 +299,10 @@
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [50,10], 0.001, 46000, 400000, 6, 1)
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [98,14.5], 0.001, 46000, 1500000, 6, 1)
 			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [10,10], 0.001, 46000, 1500000, 6, 1, undefined, true, false);
+			if (isNaN(thr[0]) || isNaN(thr[1])) {
+				console.log("No thresholds were found due to 'NaN' in optimization routine, you may have to find thresholds manually.")
+				simulateThreshold = false;
+			}
 			b0 = thr[0];
 			b1 = thr[1];
 		} else {

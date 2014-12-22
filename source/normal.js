@@ -366,6 +366,10 @@
 			console.log("calculating thresholds via simulation")
 			console.log("Please note : Calculating thresholds via simulation might take a long time. To save time, consult the SeGLiR reference to find test settings that already have precalculated thresholds.")
 			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [10,10], 0.001, 46000, 1500000, 6, 1, undefined, true);
+			if (isNaN(thr[0]) || isNaN(thr[1])) {
+				console.log("No thresholds were found due to 'NaN' in optimization routine, you may have to find thresholds manually.")
+				simulateThreshold = false;
+			}
 			b0 = thr[0];
 			b1 = thr[1];
 		} else {

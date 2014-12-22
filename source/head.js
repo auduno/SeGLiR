@@ -192,6 +192,11 @@ var glr = function() {
 			est_point[0] += next_point[0];
 			est_point[1] += next_point[1];
 
+			if (isNaN(est_point[0]) || isNaN(est_point[1])) {
+				console.log("Stopped estimation due to 'NaN' in estimates, probably due to an incontinuous response function.");
+				return est_point;
+			}
+
 			if (upper_limit) {
 				if (est_point[0] > upper_limit) {
 					est_point[0] = upper_limit;

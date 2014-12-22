@@ -192,6 +192,11 @@ var glr = function() {
 			est_point[0] += next_point[0];
 			est_point[1] += next_point[1];
 
+			if (isNaN(est_point[0]) || isNaN(est_point[1])) {
+				console.log("Stopped estimation due to 'NaN' in estimates, probably due to an incontinuous response function.");
+				return est_point;
+			}
+
 			if (upper_limit) {
 				if (est_point[0] > upper_limit) {
 					est_point[0] = upper_limit;
@@ -587,6 +592,10 @@ var glr = function() {
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [50,10], 0.001, 46000, 400000, 6, 1)
 			//var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [98,14.5], 0.001, 46000, 1500000, 6, 1)
 			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [10,10], 0.001, 46000, 1500000, 6, 1, undefined, true, false);
+			if (isNaN(thr[0]) || isNaN(thr[1])) {
+				console.log("No thresholds were found due to 'NaN' in optimization routine, you may have to find thresholds manually.")
+				simulateThreshold = false;
+			}
 			b0 = thr[0];
 			b1 = thr[1];
 		} else {
@@ -993,7 +1002,7 @@ var glr = function() {
 					0.1 : [41.4, 24.4],
 					0.05 : [65, 27.5],
 					0.025 : [74.5, 33.8],
-					0.01 : [93, 44] // approximate
+					0.01 : [90, 46]
 				}
 			}
 		}
@@ -1627,6 +1636,10 @@ var glr = function() {
 			console.log("calculating thresholds via simulation")
 			console.log("Please note : Calculating thresholds via simulation might take a long time. To save time, consult the SeGLiR reference to find test settings that already have precalculated thresholds.")
 			var thr = optimize2d([alpha_value, beta_value], boundaryFun(indifference), [10,10], 0.001, 46000, 1500000, 6, 1, undefined, true);
+			if (isNaN(thr[0]) || isNaN(thr[1])) {
+				console.log("No thresholds were found due to 'NaN' in optimization routine, you may have to find thresholds manually.")
+				simulateThreshold = false;
+			}
 			b0 = thr[0];
 			b1 = thr[1];
 		} else {
