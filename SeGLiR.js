@@ -1370,8 +1370,13 @@ var glr = function() {
 			var outcomes = [];
 			// simulate n outcomes
 			for (var i = 0;i < samples;i++) {
-				console.log(i);
-				var res = simulateResult([ests[0],var_value],[ests[1],var_value],b0,b1);
+				if (var_value) {
+					var res = simulateResult([ests[0],var_value],[ests[1],var_value],b0,b1);
+				} else {
+					// get estimate of variance
+					var pooled_variance = 1/(2*(n-1)) * (S_x2 + S_y2 - (S_x*S_x + S_y*S_y)/n);
+					var res = simulateResult([ests[0],pooled_variance],[ests[1],pooled_variance],b0,b1);
+				}
 				var time = res[5];
 				outcomes[i] = [res[1]/time, res[2]/time];
 			}
@@ -1650,7 +1655,7 @@ var glr = function() {
 		if (var_value) {
 			var simulateH0 = functions['normal_kv'][sides]['simulateH0'](simulateResult, indiff, b0, b1, var_value);
 			// TODO : implement maxSamplesize for one-sided test as well
-			if (sides in functions['normal_kv']) {
+			if ('max_samplesize' in functions['normal_kv'][sides]) {
 				this.maxSamplesize = functions['normal_kv'][sides]['max_samplesize'](indiff, var_value, b0, b1);
 			}
 		} else {
