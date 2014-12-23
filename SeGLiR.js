@@ -1370,7 +1370,8 @@ var glr = function() {
 			var outcomes = [];
 			// simulate n outcomes
 			for (var i = 0;i < samples;i++) {
-				var res = simulateResult(ests[0],ests[1],b0,b1);
+				console.log(i);
+				var res = simulateResult([ests[0],var_value],[ests[1],var_value],b0,b1);
 				var time = res[5];
 				outcomes[i] = [res[1]/time, res[2]/time];
 			}
@@ -1904,7 +1905,7 @@ var glr = function() {
 
 	var normal_twosided_simulateH0 = function(simRes, indiff, b0, b1, var_val) {
 		var returnFun = function() {
-			var res = simRes([0,var_val],[0,var_val],b0,b1)[4];
+			var res = simRes([0,var_val],[0,var_val],b0,b1)[6];
 			return res;
 		}
 		return returnFun;
@@ -2165,7 +2166,7 @@ var glr = function() {
 
 	var normal_onesided_simulateH0 = function(simRes, indiff, b0, b1, var_val) {
 		var returnFun = function() {
-			var res = simRes([0-indiff/2,var_val],[0+indiff/2,var_val],b0,b1)[4];
+			var res = simRes([0-indiff/2,var_val],[0+indiff/2,var_val],b0,b1)[6];
 			return res;
 		}
 		return returnFun;
