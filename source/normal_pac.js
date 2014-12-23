@@ -29,7 +29,7 @@
 		/** public functions **/
 
 		this.getResults = function() {
-			var L_an = LikH0(S_x, S_y, S_x2, S_y2, n_x, n_y);
+			var L_an = LikH0(S_x, S_y, S_x2, S_y2, n_x, n_y, var_value);
 			return {
 				'S_x' : S_x,
 				'S_y' : S_y,
@@ -55,7 +55,7 @@
 			var outcomes = [];
 			// simulate n outcomes
 			for (var i = 0;i < samples;i++) {
-				var res = simulateResult(ests[0],ests[1]);
+				var res = simulateResult([ests[0],var_value],[ests[1],var_value]);
 				var time = res[5];
 				outcomes[i] = [res[1]/time, res[2]/time];
 			}
