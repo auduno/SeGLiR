@@ -354,7 +354,7 @@ If this function returns the strings "true" or "false", the test has finished. "
 <li><em><strong>addData(</strong>{x : 1, y : 1}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"true"</em> ($H_A$ was rejected) or <em>"false"</em> ($H_0$ was rejected) as a string. Note that after the test is finished, the instance will still store new samples added, but test statistics and conclusion will not be updated. All stored samples collected can be retrieved via <em>getData()</em>.</li>
 <li><em><strong>expectedSamplesize(</strong>p1, p2<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true parameters $p_1$ and $p_2$.</li>
 <li><em><strong>maxSamplesize()</strong></em> : returns the worst-case maximum samplesize of this test.</li>
-<li><em><strong>properties()</strong></em> : returns an object with properties of this test that were specified on initialization, such as <em>type</em>, <em>sides</em>, <em>indifference size</em>, <em>alpha</em> and <em>beta</em>.</li>
+<li><em><strong>properties</strong></em> : returns an object with properties of this test that were specified on initialization, such as <em>type</em>, <em>sides</em>, <em>indifference size</em>, <em>alpha</em> and <em>beta</em>.</li>
 <li><em><strong>alpha_level(</strong>b0, b1, samples<strong>)</strong></em> : simulate the alpha level for the given thresholds $b_0$ and $b_1$. Returns the mean and bootstrapped standard error of the simulated alpha level.</li>
 <li><em><strong>beta_level(</strong>b0, b1, samples<strong>)</strong></em> : simulate the beta level for the given thresholds $b_0$ and $b_1$. Returns the mean and bootstrapped standard error of the simulated alpha level.</li>
 </ul>
@@ -412,8 +412,8 @@ test.estimate(); // returns [0, 1, -1]
 <li><em><strong>estimate(</strong>max_samples<strong>)</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $\mu_1$, $\mu_2$ and $\mu_1 - \mu_2$ respectively. <em>max_samples</em> is an optional parameter for setting max number of simulations used in estimation.</li>
 <li><em><strong>getData()</strong></em> : returns two arrays with the sequences of samples of $X$ and $Y$ collected so far.</li>
 <li><em><strong>addData(</strong>{x : 9.2, y : 8.5}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"true"</em> ($H_A$ was rejected) or <em>"false"</em> ($H_0$ was rejected) as a string. Note that after the test is finished, the instance will still store new data points added internally, but test statistics and conclusion will not be updated. All stored data points collected can be retrieved via <em>getData()</em>.</li>
-<li><em><strong>expectedSamplesize(</strong>mu1, mu2<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true parameters $\mu_1$ and $\mu_2$.</li>
-<li><em><strong>properties()</strong></em> : returns an object with properties of this test that were specified on initialization, i.e. <em>type</em>, <em>sides</em>, <em>indifference size</em>, <em>alpha</em>, <em>beta</em>, <em>variance</em> and <em>variance_bound</em>.</li>
+<li><em><strong>expectedSamplesize(</strong>[mu1,variance], [mu2,variance]<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true means $\mu_1$, $\mu_2$ and variance as given.</li>
+<li><em><strong>properties</strong></em> : returns an object with properties of this test that were specified on initialization, i.e. <em>type</em>, <em>sides</em>, <em>indifference size</em>, <em>alpha</em>, <em>beta</em>, <em>variance</em> and <em>variance_bound</em>.</li>
 <li><em><strong>alpha_level(</strong>b0, b1, samples<strong>)</strong></em> : simulate the alpha level for the given thresholds $b_0$ and $b_1$. Returns the mean and bootstrapped standard error of the simulated alpha level.</li>
 <li><em><strong>beta_level(</strong>b0, b1, samples<strong>)</strong></em> : simulate the beta level for the given thresholds $b_0$ and $b_1$. Returns the mean and bootstrapped standard error of the simulated alpha level.</li>
 </ul>
@@ -466,7 +466,7 @@ test.estimate() // returns [4.1673, 7.9274, -3.7601]
 <li><em><strong>getData()</strong></em> : returns two arrays with the sequences of samples of $X$ and $Y$ collected so far.</li>
 <li><em><strong>addData(</strong>{x : 1, y : 1}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"X"</em> (i.e. $p_1 > p_2$) or <em>"Y"</em> ($p_2 > p_1$) as a string. Note that after the test is finished, the instance will still store new sampels added, but test statistics and conclusion will not be updated. All stored samples collected can be retrieved via <em>getData()</em>.</li>
 <li><em><strong>expectedSamplesize(</strong>p1, p2<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true parameters $p_1$ and $p_2$.</li>
-<li><em><strong>properties()</strong></em> : returns an object with properties of this test that were specified on initialization, i.e. <em>delta</em>.</li>
+<li><em><strong>properties</strong></em> : returns an object with properties of this test that were specified on initialization, i.e. <em>delta</em>.</li>
 </ul>
 
 <p>A simple example:</p>
@@ -489,8 +489,9 @@ test.estimate(); // returns [0, 1, -1]
 <p>Test instantiation:</p>
 
 <ul>
-<li><em>seglir.</em><strong>test(</strong>"normal_pac", <em>delta</em>)</strong><ul>
+<li><em>seglir.</em><strong>test(</strong>"normal_pac", <em>delta</em>, <em>variance</em>)</strong><ul>
     <li><em>delta</em> : the wanted error guarantee</li>
+    <li><em>variance</em> : the known variance</li>
   </ul>
 </li>
 </ul>
@@ -503,8 +504,8 @@ test.estimate(); // returns [0, 1, -1]
 <li><em><strong>estimate(</strong>max_samples<strong>)</strong></em> : if the test is done, this returns whitehead bias-adjusted estimates of $\mu_1$, $\mu_2$ and $\mu_1 - \mu_2$ respectively. <em>max_samples</em> is an optional parameter for setting max number of simulations used in estimation.</li>
 <li><em><strong>getData()</strong></em> : returns two arrays with the sequences of samples of $X$ and $Y$ collected so far.</li>
 <li><em><strong>addData(</strong>{x : 2.3, y : 9.8}<strong>)</strong></em> : add data points from samples of $X$ and $Y$ respectively. Note that it's possible to add samples from $X$ and $Y$ separately. Returns <em>undefined</em> until test is finished, when it will return either <em>"X"</em> (i.e. $\mu_1 > \mu_2$) or <em>"Y"</em> ($\mu_2 > \mu_1$) as a string. Note that after the test is finished, the instance will still store new data points added internally, but test statistics and conclusion will not be updated. All stored data points collected can be retrieved via <em>getData()</em>.</li>
-<li><em><strong>expectedSamplesize(</strong>mu_1, mu_2<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true parameters $\mu_1$ and $\mu_2$.</li>
-<li><em><strong>properties()</strong></em> : returns an object with properties of this test that were specified on initialization, in this case <em>delta</em>.</li>
+<li><em><strong>expectedSamplesize(</strong>[mu_1,variance], [mu_2,variance]<strong>)</strong></em> : simulates the expected sample size needed for concluding a test with true means $\mu_1$, $\mu_2$ and variance as given.</li>
+<li><em><strong>properties</strong></em> : returns an object with properties of this test that were specified on initialization, in this case <em>delta</em>.</li>
 </ul>
 
 <p>A simple example:</p>
