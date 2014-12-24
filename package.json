@@ -1,5 +1,5 @@
 {
-  "name": "SeGLiR",
+  "name": "seglir",
   "description": "Sequential Generalized Likelihood Ratio Tests for A/B-testing",
   "keywords": [
     "statistics",
