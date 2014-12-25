@@ -7,6 +7,8 @@ Sequential GLR tests are a family of [sequential hypothesis tests](http://en.wik
 
 ![Expected samplesize comparison](http://auduno.github.io/SeGLiR/images/samplesize2b.png)
 
+Try out [this demo](http://auduno.github.io/SeGLiR/demo/demo.html) to compare samplesize from the fixed samplesize test versus the sequential GLR test yourself.
+
 SeGLiR currently contain these tests:
 * comparing two bernoulli proportions (for instance for comparing conversion on a website)
 * comparing two normal means (with equal, known or unknown variance)
