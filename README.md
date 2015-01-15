@@ -39,6 +39,8 @@ test.addData({x : 0, y : 0});
 test.addData({y : 1});
 ...
 // when function returns string 'true' or 'false', the test is concluded
+// 'true' means the null hypothesis was accepted
+// 'false' means the null hypothesis was rejected (and the alternative hypothesis accepted)
 test.getResults()
 // get bias-adjusted estimates
 test.estimate()
