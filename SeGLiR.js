@@ -406,14 +406,22 @@ var glr = function() {
 
 		// get estimate (only when test is done)
 		// use bias-reduction
-		this.estimate = function(max_samples) {
+		this.estimate = function(max_samples, bias_correct) {
 			if (!finished) {
 				return undefined;
 			}
 			if (typeof(max_samples) == "undefined") {
 				max_samples = 1500000;
 			}
-			var ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, max_samples, 0.02, 0, 1, true);
+			if (typeof(bias_correct) == "undefined") {
+				bias_correct = true;
+			}
+			var ests;
+			if (bias_correct) {
+				ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, max_samples, 0.02, 0, 1, true);
+			} else {
+				ests = [S_x/n, S_y/n];
+			}
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}
@@ -1089,14 +1097,22 @@ var glr = function() {
 
 		// get estimate (only when test is done)
 		  // use bias-reduction
-		this.estimate = function(max_samples) {
+		this.estimate = function(max_samples, bias_correct) {
 			if (!finished) {
 				return undefined;
 			}
 			if (typeof(max_samples) == "undefined") {
 				max_samples = 1500000;
 			}
-			var ests = optimize2d([S_x/n_x, S_y/n_y], biasFun(), [S_x/n_x, S_y/n_y], 0.005, 16400, max_samples, 0.02, 0, 1, true);
+			if (typeof(bias_correct) == "undefined") {
+				bias_correct = true;
+			}
+			var ests;
+			if (bias_correct) {
+				ests = optimize2d([S_x/n_x, S_y/n_y], biasFun(), [S_x/n_x, S_y/n_y], 0.005, 16400, max_samples, 0.02, 0, 1, true);
+			} else {
+				ests = [S_x/n_x, S_y/n_y];
+			}
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}
@@ -1408,14 +1424,22 @@ var glr = function() {
 
 		// get estimate (only when test is done)
 		  // use bias-reduction
-		this.estimate = function(max_samples) {
+		this.estimate = function(max_samples, bias_correct) {
 			if (!finished) {
 				return undefined;
 			}
 			if (typeof(max_samples) == "undefined") {
 				max_samples = 1500000;
 			}
-			var ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, max_samples, 0.02, undefined, undefined, true);
+			if (typeof(bias_correct) == "undefined") {
+				bias_correct = true;
+			}
+			var ests;
+			if (bias_correct) {
+				ests = optimize2d([S_x/n, S_y/n], biasFun(), [S_x/n, S_y/n], 0.005, 16400, max_samples, 0.02, undefined, undefined, true);
+			} else {
+				ests = [S_x/n, S_y/n];
+			}
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}
@@ -2448,14 +2472,22 @@ var glr = function() {
 
 		// get estimate (only when test is done)
 		  // use bias-reduction
-		this.estimate = function(max_samples) {
+		this.estimate = function(max_samples, bias_correct) {
 			if (!finished) {
 				return undefined;
 			}
 			if (typeof(max_samples) == "undefined") {
 				max_samples = 1500000;
 			}
-			var ests = optimize2d([S_x/n_x, S_y/n_y], biasFun(), [S_x/n_x, S_y/n_y], 0.005, 16400, max_samples, 0.02, undefined, undefined, true);
+			if (typeof(bias_correct) == "undefined") {
+				bias_correct = true;
+			}
+			var ests;
+			if (bias_correct) {
+				ests = optimize2d([S_x/n_x, S_y/n_y], biasFun(), [S_x/n_x, S_y/n_y], 0.005, 16400, max_samples, 0.02, undefined, undefined, true);
+			} else {
+				ests = [S_x/n_x, S_y/n_y];
+			}
 			// TODO : should we include std.dev.?
 			return [ests[0], ests[1], ests[0]-ests[1]];
 		}
